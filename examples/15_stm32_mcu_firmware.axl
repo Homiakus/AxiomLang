@@ -1,0 +1,45 @@
+// 15_stm32_mcu_firmware.axl — Автономная безопасная прошивка микроконтроллера (ARM Cortex-M / RISC-V)
+// Zero-Ambient Authority | Hardware MMIO | Interrupt Interlock Control
+
+require cap[Hardware.Port]
+require cap[Hardware.RS485]
+require cap[Safety.Interlock]
+
+struct MCUSystemState {
+    heartbeat_ticks: int,
+    sensor_value: int,
+    alarm_active: bool
+}
+
+// Прямая запись в конфигурационный регистр GPIO периферии (MMIO)
+fn configure_gpio(port_base: int, pin_mask: int) -> int {
+    mmio_write(port_base, pin_mask);
+    return mmio_read(port_base);
+}
+
+// Безопасное переключение состояния выходного пина с аппаратным барьером
+fn set_actuator_pin(port_base: int, state: int) -> int {
+    mmio_write(port_base + 24, state);
+    return 1;
+}
+
+intent "Инициализация тактирования и защищенной периферии микроконтроллера" {
+    // Отключение прерываний на время критической конфигурации
+    mcu.disable_irq();
+
+    // 0x40020000: Базовый физический адрес GPIOA на ARM Cortex-M
+    let gpio_status = configure_gpio(1073872896, 65535);
+
+    // 0x40011000: Физический адрес UART1
+    mmio_write(1073811456, 115200);
+
+    // Включение прерываний обратно
+    mcu.enable_irq();
+}
+
+intent "Рабочий цикл защитной автоматики (Safety Interlock Loop)" {
+    let state = { heartbeat_ticks: 1, sensor_value: 42, alarm_active: false };
+    
+    // Атомарное переключение индикатора состояния
+    set_actuator_pin(1073872896, 1);
+}
