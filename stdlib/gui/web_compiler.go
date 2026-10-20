@@ -3,6 +3,8 @@ package gui
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -609,12 +611,33 @@ func CompileHTMLFileToBMP(htmlFilePath, outBmpPath string, width, height int) er
 	return canvas.SaveAsBMP(outBmpPath)
 }
 
-// LoadHTMLFile reads an HTML file with its styles and compiles it into an AXLUIModel
+// LoadHTMLFile reads an HTML file with its linked CSS styles and compiles it into an AXLUIModel
 func LoadHTMLFile(htmlFilePath string) (*AXLUIModel, error) {
 	data, err := os.ReadFile(htmlFilePath)
 	if err != nil {
 		return nil, err
 	}
-	title := "Compiled Web App"
-	return CompileWebInterface(string(data), "", title)
+	htmlContent := string(data)
+	dir := filepath.Dir(htmlFilePath)
+
+	// Automatically detect and load linked CSS stylesheets (<link rel="stylesheet" href="...">)
+	var cssBuilder strings.Builder
+	reLinkCSS := regexp.MustCompile(`<link[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>`)
+	matches := reLinkCSS.FindAllStringSubmatch(htmlContent, -1)
+	for _, m := range matches {
+		if len(m) > 1 {
+			href := m[1]
+			// Only resolve local CSS files
+			if !strings.HasPrefix(href, "http://") && !strings.HasPrefix(href, "https://") && !strings.HasPrefix(href, "//") {
+				cssPath := filepath.Join(dir, href)
+				if cssData, err := os.ReadFile(cssPath); err == nil {
+					cssBuilder.Write(cssData)
+					cssBuilder.WriteString("\n")
+				}
+			}
+		}
+	}
+
+	title := "Compiled Web App: " + filepath.Base(htmlFilePath)
+	return CompileWebInterface(htmlContent, cssBuilder.String(), title)
 }
