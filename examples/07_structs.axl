@@ -1,0 +1,14 @@
+// 07_structs.axl — Пользовательские структуры данных и типизация в AxiomLang
+
+require cap[Console.Out]
+
+struct UserConfig {
+    user: string,
+    theme: string,
+    version: int
+}
+
+intent "Создание и инициализация структуры с мандатной защитой" {
+    let conf = { user: "Admin", theme: "GlassDark", version: 1 };
+    print(conf);
+}

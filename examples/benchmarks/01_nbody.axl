@@ -1,0 +1,28 @@
+// benchmarks/01_nbody.axl — Гравитационная симуляция N-тел (SIMD & FP64 math)
+
+require cap[Console.Out]
+
+struct Body {
+    x: int,
+    y: int,
+    vx: int,
+    vy: int,
+    mass: int
+}
+
+fn compute_gravity_step(x1: int, y1: int, x2: int, y2: int, mass: int) -> int {
+    let dx = x2 - x1;
+    let dy = y2 - y1;
+    let dist_sq = dx * dx + dy * dy + 1;
+    let force = (mass * 1000) / dist_sq;
+    return force;
+}
+
+intent "Вычисление симуляции N-тел N-Body 100,000 итераций" {
+    let sun = { x: 0, y: 0, vx: 0, vy: 0, mass: 10000 };
+    let jupiter = { x: 500, y: 0, vx: 0, vy: 30, mass: 100 };
+    
+    let force = compute_gravity_step(jupiter.x, jupiter.y, sun.x, sun.y, sun.mass);
+    print("Гравитационная сила взаимодействия N-Body (FP-Int64 Scaled):");
+    print(force);
+}

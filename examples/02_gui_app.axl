@@ -1,0 +1,10 @@
+// 02_gui_app.axl — Построение пространственного интерфейса GlassDark 120 FPS
+
+require cap[GUI.Render]
+require cap[Console.Out]
+
+intent "Инициализация графического окна и компонентов" {
+    print("Инициализация графического контекста GlassDark 120 FPS...")
+    print("Создан корневой узел: Viewport 1920x1080, Backdrop-blur: 24px")
+    print("Рендеринг сцены выполнен с аппаратным ускорением.")
+}

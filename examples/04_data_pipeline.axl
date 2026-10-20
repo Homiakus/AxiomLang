@@ -1,0 +1,15 @@
+// 04_data_pipeline.axl — Векторная обработка и условия в AxiomLang
+
+require cap[Console.Out]
+
+intent "Вычисление аналитических метрик и фильтрация" {
+    let base_score = 100;
+    let bonus = 25;
+    let total = base_score + bonus;
+
+    if total > 100 {
+        print("Порог аналитической эффективности превышен!");
+    } else {
+        print("Порог не достигнут");
+    }
+}

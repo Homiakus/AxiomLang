@@ -1,0 +1,10 @@
+// 08_actor_erlang_syntax.axl — Нативный синтаксис акторов Erlang/Go в AxiomLang
+
+require cap[Console.Out]
+require cap[Actor.Spawn]
+
+intent "Спавн актора и отправка сообщения с нативным синтаксисом" {
+    spawn WorkerProcess();
+    send WorkerProcess <- "EXECUTE_PARALLEL_TASK";
+    print("Сообщение успешно направлено в изолированный почтовый ящик.");
+}

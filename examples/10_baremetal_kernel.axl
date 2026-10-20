@@ -1,0 +1,31 @@
+// 10_baremetal_kernel.axl — Минимальное ядро ОС с аппаратным GUI (Ring 0 / Freestanding)
+
+require cap[Hardware.Port]
+require cap[GUI.Render]
+
+struct PageDirectory {
+    entries: int,
+    flags: int
+}
+
+fn init_vga_buffer(base_addr: int, color_attr: int) -> int {
+    let offset = base_addr + 160;
+    return offset;
+}
+
+intent "Инициализация видеопамяти и вывод графики на голом железе" {
+    // 1. Инициализация страничных структур памяти
+    let page_dir = { entries: 1024, flags: 3 };
+    let vga_target = init_vga_buffer(753664, 15);
+
+    // 2. Прямой вывод символов в текстовый видеобуфер VGA 0xB8000 без ОС (колонка, строка, ASCII-код, цвет)
+    gui.vga_char(0, 0, 65, 31);  // 'A' белым по синему
+    gui.vga_char(1, 0, 88, 31);  // 'X'
+    gui.vga_char(2, 0, 76, 31);  // 'L'
+    gui.vga_char(4, 0, 79, 47);  // 'O'
+    gui.vga_char(5, 0, 83, 47);  // 'S'
+
+    // 3. Аппаратный рендеринг пикселя в линейный фреймбуфер MMIO (адрес, шаг строки, X, Y, цвет ARGB)
+    // 0xFD000000 = 4244635648 (физический адрес видеокарты)
+    gui.draw_pixel(4244635648, 7680, 100, 100, 4278241023);
+}

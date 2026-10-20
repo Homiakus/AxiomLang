@@ -1,0 +1,13 @@
+// 06_functions.axl — Пользовательские функции и вычисления в AxiomLang
+
+require cap[Console.Out]
+
+fn compute_hash_metric(base: int, factor: int) -> int {
+    let result = base * factor + 42;
+    return result;
+}
+
+intent "Вызов чистой функции и вывод результата" {
+    let metric = compute_hash_metric(10, 5);
+    print(metric);
+}

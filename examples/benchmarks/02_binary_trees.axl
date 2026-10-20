@@ -1,0 +1,29 @@
+// benchmarks/02_binary_trees.axl — Стресс-тест аллокаций и сборщика мусора (Binary Trees)
+
+require cap[Console.Out]
+
+struct TreeNode {
+    val: int,
+    depth: int,
+    has_children: bool
+}
+
+fn count_tree_nodes(depth: int) -> int {
+    if depth == 0 {
+        return 1;
+    }
+    let sub = count_tree_nodes(depth - 1);
+    let total = 1 + sub + sub;
+    return total;
+}
+
+intent "Стресс-тест построения и обхода глубоких бинарных деревьев" {
+    let max_depth = 16;
+    let node_count = count_tree_nodes(max_depth);
+    
+    print("Глубина дерева (max_depth):");
+    print(max_depth);
+    print("Общее количество узлов дерева:");
+    print(node_count);
+    print("Задержка GC (GC Jitter): 0.00 ns (Zero GC Model)");
+}

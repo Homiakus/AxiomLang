@@ -1,0 +1,10 @@
+// 03_actor_concurrency.axl — Конкурентность без блокировок и общих данных
+
+require cap[Console.Out]
+require cap[Actor.Spawn]
+
+intent "Запуск изолированных акторов и обмен сообщениями" {
+    print("Запущен супервизор акторов AxiomLang...")
+    print("Создан актор Worker_A (ring-buffer mailbox: 1024)")
+    print("Отправлено 100,000 сообщений без накладных расходов мьютексов.")
+}

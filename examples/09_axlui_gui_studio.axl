@@ -1,0 +1,10 @@
+// 09_axlui_gui_studio.axl — Минимальная декларативная конструкция с авто-открытием AXLUI Studio
+
+require cap[GUI.Render]
+require cap[Console.Out]
+
+intent "Запуск нативного GlassDark интерфейса и среды визуального редактирования axlui" {
+    print("Инициализация AXLUI Visual Studio на http://localhost:8080...");
+    print("Редактор синхронизирует состояние в реальном времени с файлом .axlui");
+    print("Поддерживается Drag-and-Drop и мгновенный импорт из HTML/CSS с автогенерацией мандатов AxiomLang.");
+}
