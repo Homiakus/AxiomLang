@@ -64,16 +64,18 @@ func NewNativeCanvas(width, height int) *NativeCanvas {
 }
 
 // AttachBareMetalFramebuffer binds canvas directly to hardware MMIO linear framebuffer.
-func (c *NativeCanvas) AttachBareMetalFramebuffer(physicalAddr uintptr, width, height, pitch int) {
+func (c *NativeCanvas) AttachBareMetalFramebuffer(physicalPtr *uint32, width, height, pitch int) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.Width = width
 	c.Height = height
 	c.Pitch = pitch
-	c.HwBufferPtr = physicalAddr
+	c.HwBufferPtr = uintptr(unsafe.Pointer(physicalPtr))
 	c.IsHardware = true
 	// Zero-copy hardware slice mapping
-	c.Pixels = unsafe.Slice((*uint32)(unsafe.Pointer(physicalAddr)), width*height)
+	if physicalPtr != nil {
+		c.Pixels = unsafe.Slice(physicalPtr, width*height)
+	}
 }
 
 // Clear fills the entire canvas with a single color using AVX2 SIMD acceleration.

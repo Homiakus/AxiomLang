@@ -52,7 +52,7 @@ return_len:
 // s_base+0(FP): *byte
 // s_len+8(FP):  int
 // ret+16(FP):   uint32
-TEXT ·fastCRC32String(SB), NOSPLIT, $0-24
+TEXT ·fastCRC32String(SB), NOSPLIT, $0-20
 	MOVQ s_base+0(FP), SI
 	MOVQ s_len+8(FP), CX
 	MOVL $0xFFFFFFFF, AX // Initial CRC

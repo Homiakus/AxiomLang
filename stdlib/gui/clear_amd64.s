@@ -7,7 +7,7 @@
 // pixels_len+8(FP):  int
 // pixels_cap+16(FP): int
 // color+24(FP):      uint32
-TEXT ·clearPixelsAVX2(SB), NOSPLIT, $0-32
+TEXT ·clearPixelsAVX2(SB), NOSPLIT, $0-28
 	MOVQ pixels_base+0(FP), DI
 	MOVQ pixels_len+8(FP), CX
 	MOVL color+24(FP), AX
