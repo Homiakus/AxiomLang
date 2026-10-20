@@ -1,0 +1,574 @@
+{
+  "file_path": "examples/gui_spatial_dashboard.axlui",
+  "title": "Compiled Web App",
+  "theme": "GlassDark",
+  "root": {
+    "id": "elem_div_0xdc54f2d0150",
+    "tag": "div",
+    "style": {
+      "font_size": 15,
+      "flex_direction": "column",
+      "align_items": "flex-start",
+      "justify_content": "flex-start"
+    },
+    "children": [
+      {
+        "id": "elem_title_0xdc54f2d01c0",
+        "tag": "div",
+        "text": "AxiomLang Spatial GUI Studio — High-Level Fluent Dashboard",
+        "style": {
+          "font_size": 15,
+          "flex_direction": "column",
+          "align_items": "flex-start",
+          "justify_content": "flex-start"
+        }
+      },
+      {
+        "id": "elem_body_0xdc54f2d0230",
+        "tag": "div",
+        "style": {
+          "background": "radial-gradient(circle at 50% 10%, #1e1b4b 0%, #030712 100%)",
+          "color": "#f8fafc",
+          "font_size": 15,
+          "flex_direction": "row",
+          "align_items": "center",
+          "justify_content": "center"
+        },
+        "children": [
+          {
+            "id": "elem_div_0xdc54f2d02a0",
+            "tag": "div",
+            "style": {
+              "width": 1200,
+              "height": 820,
+              "background": "rgba(15, 23, 42, 0.75)",
+              "backdrop_blur": 32,
+              "border_radius": 24,
+              "border_color": "rgba(255,",
+              "box_shadow": "0 35px 70px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(99, 102, 241, 0.15)",
+              "font_size": 15,
+              "padding": "32px",
+              "flex_direction": "column",
+              "align_items": "flex-start",
+              "justify_content": "flex-start",
+              "gap": "24px"
+            },
+            "children": [
+              {
+                "id": "elem_div_0xdc54f2d0310",
+                "tag": "div",
+                "style": {
+                  "width": 100,
+                  "height": 72,
+                  "background": "rgba(15, 23, 42, 0.65)",
+                  "backdrop_blur": 16,
+                  "border_radius": 14,
+                  "border_color": "rgba(56,",
+                  "font_size": 15,
+                  "padding": "0 24px",
+                  "flex_direction": "row",
+                  "align_items": "center",
+                  "justify_content": "space-between"
+                },
+                "children": [
+                  {
+                    "id": "elem_div_0xdc54f2d0380",
+                    "tag": "div",
+                    "text": "🛡️ Quantum AI Cluster Control",
+                    "style": {
+                      "color": "#38bdf8",
+                      "font_size": 22,
+                      "font_weight": "700",
+                      "flex_direction": "row",
+                      "align_items": "center",
+                      "justify_content": "flex-start",
+                      "gap": "12px"
+                    }
+                  },
+                  {
+                    "id": "elem_div_0xdc54f2d03f0",
+                    "tag": "div",
+                    "text": "SYSTEM NOMINAL 120 FPS",
+                    "style": {
+                      "background": "linear-gradient(135deg, #10b981, #059669)",
+                      "border_radius": 8,
+                      "box_shadow": "0 0 15px rgba(16, 185, 129, 0.4)",
+                      "color": "#fff",
+                      "font_size": 12,
+                      "font_weight": "700",
+                      "padding": "6px 14px",
+                      "flex_direction": "column",
+                      "align_items": "flex-start",
+                      "justify_content": "flex-start"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "elem_div_0xdc54f2d0460",
+                "tag": "div",
+                "style": {
+                  "width": 100,
+                  "font_size": 15,
+                  "flex_direction": "row",
+                  "align_items": "flex-start",
+                  "justify_content": "flex-start",
+                  "gap": "20px"
+                },
+                "children": [
+                  {
+                    "id": "elem_div_0xdc54f2d04d0",
+                    "tag": "div",
+                    "style": {
+                      "height": 130,
+                      "background": "rgba(15, 23, 42, 0.8)",
+                      "backdrop_blur": 20,
+                      "border_radius": 16,
+                      "border_color": "rgba(168,",
+                      "font_size": 15,
+                      "padding": "20px",
+                      "flex_direction": "column",
+                      "align_items": "flex-start",
+                      "justify_content": "space-between"
+                    },
+                    "children": [
+                      {
+                        "id": "elem_div_0xdc54f2d0540",
+                        "tag": "div",
+                        "text": "CPU Core 0",
+                        "style": {
+                          "color": "#a855f7",
+                          "font_size": 11,
+                          "font_weight": "700",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      },
+                      {
+                        "id": "elem_div_0xdc54f2d05b0",
+                        "tag": "div",
+                        "text": "98.4%",
+                        "style": {
+                          "color": "#f8fafc",
+                          "font_size": 28,
+                          "font_weight": "800",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      },
+                      {
+                        "id": "elem_div_0xdc54f2d0620",
+                        "tag": "div",
+                        "text": "+2.1% (Zero GC Jitter)",
+                        "style": {
+                          "color": "#4ade80",
+                          "font_size": 12,
+                          "font_weight": "600",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "elem_div_0xdc54f2d0690",
+                    "tag": "div",
+                    "style": {
+                      "height": 130,
+                      "background": "rgba(15, 23, 42, 0.8)",
+                      "backdrop_blur": 20,
+                      "border_radius": 16,
+                      "border_color": "rgba(168,",
+                      "font_size": 15,
+                      "padding": "20px",
+                      "flex_direction": "column",
+                      "align_items": "flex-start",
+                      "justify_content": "space-between"
+                    },
+                    "children": [
+                      {
+                        "id": "elem_div_0xdc54f2d0700",
+                        "tag": "div",
+                        "text": "Memory Bandwidth",
+                        "style": {
+                          "color": "#a855f7",
+                          "font_size": 11,
+                          "font_weight": "700",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      },
+                      {
+                        "id": "elem_div_0xdc54f2d0770",
+                        "tag": "div",
+                        "text": "1.2 TB/s",
+                        "style": {
+                          "color": "#f8fafc",
+                          "font_size": 28,
+                          "font_weight": "800",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      },
+                      {
+                        "id": "elem_div_0xdc54f2d07e0",
+                        "tag": "div",
+                        "text": "SIMD Direct Access",
+                        "style": {
+                          "color": "#4ade80",
+                          "font_size": 12,
+                          "font_weight": "600",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "elem_div_0xdc54f2d0850",
+                    "tag": "div",
+                    "style": {
+                      "height": 130,
+                      "background": "rgba(15, 23, 42, 0.8)",
+                      "backdrop_blur": 20,
+                      "border_radius": 16,
+                      "border_color": "rgba(168,",
+                      "font_size": 15,
+                      "padding": "20px",
+                      "flex_direction": "column",
+                      "align_items": "flex-start",
+                      "justify_content": "space-between"
+                    },
+                    "children": [
+                      {
+                        "id": "elem_div_0xdc54f2d08c0",
+                        "tag": "div",
+                        "text": "LWE Lattice Security",
+                        "style": {
+                          "color": "#a855f7",
+                          "font_size": 11,
+                          "font_weight": "700",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      },
+                      {
+                        "id": "elem_div_0xdc54f2d0930",
+                        "tag": "div",
+                        "text": "2048 Bit",
+                        "style": {
+                          "color": "#f8fafc",
+                          "font_size": 28,
+                          "font_weight": "800",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      },
+                      {
+                        "id": "elem_div_0xdc54f2d09a0",
+                        "tag": "div",
+                        "text": "KNOT PROOF SEALED",
+                        "style": {
+                          "color": "#4ade80",
+                          "font_size": 12,
+                          "font_weight": "600",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "elem_div_0xdc54f2d0a10",
+                    "tag": "div",
+                    "style": {
+                      "height": 130,
+                      "background": "rgba(15, 23, 42, 0.8)",
+                      "backdrop_blur": 20,
+                      "border_radius": 16,
+                      "border_color": "rgba(168,",
+                      "font_size": 15,
+                      "padding": "20px",
+                      "flex_direction": "column",
+                      "align_items": "flex-start",
+                      "justify_content": "space-between"
+                    },
+                    "children": [
+                      {
+                        "id": "elem_div_0xdc54f2d0a80",
+                        "tag": "div",
+                        "text": "Actor Mailbox",
+                        "style": {
+                          "color": "#a855f7",
+                          "font_size": 11,
+                          "font_weight": "700",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      },
+                      {
+                        "id": "elem_div_0xdc54f2d0af0",
+                        "tag": "div",
+                        "text": "28.4M/s",
+                        "style": {
+                          "color": "#f8fafc",
+                          "font_size": 28,
+                          "font_weight": "800",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      },
+                      {
+                        "id": "elem_div_0xdc54f2d0b60",
+                        "tag": "div",
+                        "text": "+14% Lock-Free Scale",
+                        "style": {
+                          "color": "#4ade80",
+                          "font_size": 12,
+                          "font_weight": "600",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "elem_div_0xdc54f2d0bd0",
+                "tag": "div",
+                "style": {
+                  "font_size": 15,
+                  "flex_direction": "column",
+                  "align_items": "flex-start",
+                  "justify_content": "flex-start",
+                  "gap": "20px"
+                },
+                "children": [
+                  {
+                    "id": "elem_div_0xdc54f2d0c40",
+                    "tag": "div",
+                    "style": {
+                      "background": "rgba(30, 41, 59, 0.65)",
+                      "backdrop_blur": 20,
+                      "border_radius": 16,
+                      "border_color": "rgba(255,",
+                      "font_size": 15,
+                      "padding": "24px",
+                      "flex_direction": "column",
+                      "align_items": "flex-start",
+                      "justify_content": "flex-start",
+                      "gap": "12px"
+                    },
+                    "children": [
+                      {
+                        "id": "elem_h3_0xdc54f2d0cb0",
+                        "tag": "text",
+                        "text": "🧠 Neural Invariant Guard",
+                        "style": {
+                          "font_size": 20,
+                          "font_weight": "600",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      },
+                      {
+                        "id": "elem_p_0xdc54f2d0d20",
+                        "tag": "text",
+                        "text": "Встроенный MicroNeuralHealer в рантайме отслеживает градиентные аномалии и восстанавливает поврежденные структуры без падения процесса.",
+                        "style": {
+                          "font_size": 15,
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "elem_div_0xdc54f2d0d90",
+                    "tag": "div",
+                    "style": {
+                      "background": "rgba(30, 41, 59, 0.65)",
+                      "backdrop_blur": 20,
+                      "border_radius": 16,
+                      "border_color": "rgba(255,",
+                      "font_size": 15,
+                      "padding": "24px",
+                      "flex_direction": "column",
+                      "align_items": "flex-start",
+                      "justify_content": "flex-start",
+                      "gap": "12px"
+                    },
+                    "children": [
+                      {
+                        "id": "elem_h3_0xdc54f2d0e00",
+                        "tag": "text",
+                        "text": "🔒 Zero-Ambient Controller",
+                        "style": {
+                          "font_size": 20,
+                          "font_weight": "600",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      },
+                      {
+                        "id": "elem_p_0xdc54f2d0e70",
+                        "tag": "text",
+                        "text": "Ни один компонент интерфейса не имеет прямого доступа к сокетам или диску без предварительно проверенного мандата .",
+                        "style": {
+                          "font_size": 15,
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        },
+                        "children": [
+                          {
+                            "id": "elem_code_0xdc54f2d0ee0",
+                            "tag": "div",
+                            "text": "require cap[...]",
+                            "style": {
+                              "font_size": 15,
+                              "flex_direction": "column",
+                              "align_items": "flex-start",
+                              "justify_content": "flex-start"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "elem_div_0xdc54f2d0f50",
+                    "tag": "div",
+                    "style": {
+                      "background": "rgba(30, 41, 59, 0.65)",
+                      "backdrop_blur": 20,
+                      "border_radius": 16,
+                      "border_color": "rgba(255,",
+                      "font_size": 15,
+                      "padding": "24px",
+                      "flex_direction": "column",
+                      "align_items": "flex-start",
+                      "justify_content": "flex-start",
+                      "gap": "12px"
+                    },
+                    "children": [
+                      {
+                        "id": "elem_h3_0xdc54f2d0fc0",
+                        "tag": "text",
+                        "text": "⚡ Bare-Metal LLVM Telemetry",
+                        "style": {
+                          "font_size": 20,
+                          "font_weight": "600",
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      },
+                      {
+                        "id": "elem_p_0xdc54f2d1030",
+                        "tag": "text",
+                        "text": "Рендеринг сцены компилируется напрямую в промежуточное представление LLVM без накладных расходов виртуальных машин.",
+                        "style": {
+                          "font_size": 15,
+                          "flex_direction": "column",
+                          "align_items": "flex-start",
+                          "justify_content": "flex-start"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "elem_div_0xdc54f2d10a0",
+                "tag": "div",
+                "style": {
+                  "font_size": 15,
+                  "flex_direction": "row",
+                  "align_items": "flex-start",
+                  "justify_content": "flex-start",
+                  "gap": "16px"
+                },
+                "children": [
+                  {
+                    "id": "elem_button_0xdc54f2d1110",
+                    "tag": "button",
+                    "text": "🔄 Перезапустить Акторы",
+                    "style": {
+                      "height": 48,
+                      "background": "linear-gradient(135deg, #f43f5e, #e11d48)",
+                      "border_radius": 12,
+                      "border_color": "none",
+                      "box_shadow": "0 10px 20px rgba(244, 63, 94, 0.3)",
+                      "color": "#fff",
+                      "font_size": 14.5,
+                      "font_weight": "600",
+                      "flex_direction": "row",
+                      "align_items": "center",
+                      "justify_content": "center",
+                      "gap": "8px"
+                    }
+                  },
+                  {
+                    "id": "elem_button_0xdc54f2d1180",
+                    "tag": "button",
+                    "text": "🔑 Сгенерировать LWE Ключ",
+                    "style": {
+                      "height": 48,
+                      "background": "linear-gradient(135deg, #10b981, #059669)",
+                      "border_radius": 12,
+                      "border_color": "none",
+                      "box_shadow": "0 10px 20px rgba(16, 185, 129, 0.3)",
+                      "color": "#fff",
+                      "font_size": 14.5,
+                      "font_weight": "600",
+                      "flex_direction": "row",
+                      "align_items": "center",
+                      "justify_content": "center",
+                      "gap": "8px"
+                    }
+                  },
+                  {
+                    "id": "elem_button_0xdc54f2d11f0",
+                    "tag": "button",
+                    "text": "⚡ Экспорт в LLVM IR",
+                    "style": {
+                      "height": 48,
+                      "background": "linear-gradient(135deg, #0ea5e9, #2563eb)",
+                      "border_radius": 12,
+                      "border_color": "none",
+                      "box_shadow": "0 10px 20px rgba(14, 165, 233, 0.3)",
+                      "color": "#fff",
+                      "font_size": 14.5,
+                      "font_weight": "600",
+                      "flex_direction": "row",
+                      "align_items": "center",
+                      "justify_content": "center",
+                      "gap": "8px"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
