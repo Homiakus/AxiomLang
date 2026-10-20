@@ -27,6 +27,8 @@ type Expression interface {
 
 // Program is the root AST node
 type Program struct {
+	Imports      []*ImportStatement
+	Enums        []*EnumStatement
 	Capabilities []*CapabilityStatement
 	Structs      []*StructStatement
 	Functions    []*FunctionStatement
@@ -43,6 +45,12 @@ func (p *Program) TokenLiteral() string {
 
 func (p *Program) String() string {
 	var out bytes.Buffer
+	for _, imp := range p.Imports {
+		out.WriteString(imp.String() + "\n")
+	}
+	for _, e := range p.Enums {
+		out.WriteString(e.String() + "\n")
+	}
 	for _, c := range p.Capabilities {
 		out.WriteString(c.String() + "\n")
 	}
@@ -59,6 +67,43 @@ func (p *Program) String() string {
 		out.WriteString(s.String() + "\n")
 	}
 	return out.String()
+}
+
+// ImportStatement represents: import "path/to/module.axl"
+type ImportStatement struct {
+	Token lexer.Token // IMPORT token
+	Path  string
+}
+
+func (is *ImportStatement) statementNode()       {}
+func (is *ImportStatement) TokenLiteral() string { return is.Token.Literal }
+func (is *ImportStatement) String() string       { return fmt.Sprintf("import %q", is.Path) }
+
+// EnumVariant represents variant in enum
+type EnumVariant struct {
+	Name *Identifier
+	Type string // optional payload type, e.g. "int" or ""
+}
+
+// EnumStatement represents: enum Result { Ok(string), Err(int) }
+type EnumStatement struct {
+	Token    lexer.Token // ENUM token
+	Name     *Identifier
+	Variants []*EnumVariant
+}
+
+func (es *EnumStatement) statementNode()       {}
+func (es *EnumStatement) TokenLiteral() string { return es.Token.Literal }
+func (es *EnumStatement) String() string {
+	var vars []string
+	for _, v := range es.Variants {
+		if v.Type != "" {
+			vars = append(vars, fmt.Sprintf("%s(%s)", v.Name.String(), v.Type))
+		} else {
+			vars = append(vars, v.Name.String())
+		}
+	}
+	return fmt.Sprintf("enum %s { %s }", es.Name.String(), strings.Join(vars, ", "))
 }
 
 // CapabilityStatement represents: require cap[Resource.Action(args)]
@@ -225,6 +270,31 @@ func (ss *SendStatement) statementNode()       {}
 func (ss *SendStatement) TokenLiteral() string { return ss.Token.Literal }
 func (ss *SendStatement) String() string {
 	return fmt.Sprintf("send %s <- %s;", ss.Target.String(), ss.Message.String())
+}
+
+// MatchCase represents a single arm: Pattern => { ... }
+type MatchCase struct {
+	Pattern Expression
+	Body    *BlockStatement
+}
+
+// MatchStatement represents: match expr { pattern => { ... } }
+type MatchStatement struct {
+	Token lexer.Token // MATCH token
+	Value Expression
+	Cases []*MatchCase
+}
+
+func (ms *MatchStatement) statementNode()       {}
+func (ms *MatchStatement) TokenLiteral() string { return ms.Token.Literal }
+func (ms *MatchStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString(fmt.Sprintf("match %s {\n", ms.Value.String()))
+	for _, c := range ms.Cases {
+		out.WriteString(fmt.Sprintf("    %s => %s\n", c.Pattern.String(), c.Body.String()))
+	}
+	out.WriteString("}")
+	return out.String()
 }
 
 // IfStatement represents: if condition { consequence } else { alternative }

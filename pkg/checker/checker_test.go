@@ -146,3 +146,37 @@ intent "Authorized Net" {
 		t.Fatalf("expected 0 errors for authorized net listen, got: %v", errs3)
 	}
 }
+
+func TestScopeChecker_TypeInferenceAndEnums(t *testing.T) {
+	input := `
+enum Result {
+    Ok(string),
+    Err(int)
+}
+
+intent "Test Enums and Matching" {
+    let code = 42;
+    let message = "success";
+    match code {
+        42 => {
+            let res = 100;
+        },
+        0 => {
+            let res = 0;
+        }
+    }
+}
+`
+	l := lexer.New(input)
+	p := parser.New(l)
+	prog := p.ParseProgram()
+	if len(p.Errors()) > 0 {
+		t.Fatalf("parser errors: %v", p.Errors())
+	}
+
+	sc := checker.New()
+	errs := sc.Check(prog)
+	if len(errs) != 0 {
+		t.Fatalf("expected 0 checker errors, got: %v", errs)
+	}
+}

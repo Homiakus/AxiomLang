@@ -13,12 +13,18 @@ type Capability struct {
 
 type ScopeChecker struct {
 	grantedCaps map[string]bool // key: "Resource" or "Resource:target"
+	structs     map[string]*ast.StructStatement
+	enums       map[string]*ast.EnumStatement
+	types       map[string]string // variable -> declared/inferred type
 	errors      []string
 }
 
 func New() *ScopeChecker {
 	return &ScopeChecker{
 		grantedCaps: make(map[string]bool),
+		structs:     make(map[string]*ast.StructStatement),
+		enums:       make(map[string]*ast.EnumStatement),
+		types:       make(map[string]string),
 		errors:      []string{},
 	}
 }
@@ -26,6 +32,17 @@ func New() *ScopeChecker {
 func (sc *ScopeChecker) Check(program *ast.Program) []string {
 	sc.errors = []string{}
 	sc.grantedCaps = make(map[string]bool)
+	sc.structs = make(map[string]*ast.StructStatement)
+	sc.enums = make(map[string]*ast.EnumStatement)
+	sc.types = make(map[string]string)
+
+	// Phase 0: Register declared Enums and Structs
+	for _, en := range program.Enums {
+		sc.enums[en.Name.Value] = en
+	}
+	for _, st := range program.Structs {
+		sc.structs[st.Name.Value] = st
+	}
 
 	// Phase 1: Register declared capabilities
 	for _, capStmt := range program.Capabilities {
@@ -98,7 +115,15 @@ func (sc *ScopeChecker) checkStatement(stmt ast.Statement) {
 	case *ast.ExpressionStatement:
 		sc.checkExpression(s.Expression)
 	case *ast.LetStatement:
+		valType := sc.inferType(s.Value)
+		sc.types[s.Name.Value] = valType
 		sc.checkExpression(s.Value)
+	case *ast.MatchStatement:
+		sc.checkExpression(s.Value)
+		for _, c := range s.Cases {
+			sc.checkExpression(c.Pattern)
+			sc.checkBlock(c.Body)
+		}
 	case *ast.ReturnStatement:
 		if s.ReturnValue != nil {
 			sc.checkExpression(s.ReturnValue)
@@ -254,4 +279,46 @@ func (sc *ScopeChecker) verifyCallAuthority(call *ast.CallExpression) {
 
 func (sc *ScopeChecker) hasCap(res string) bool {
 	return sc.grantedCaps[res]
+}
+
+// inferType performs static type inference across AST expression nodes
+func (sc *ScopeChecker) inferType(expr ast.Expression) string {
+	if expr == nil {
+		return "void"
+	}
+	switch e := expr.(type) {
+	case *ast.IntegerLiteral:
+		return "int"
+	case *ast.StringLiteral:
+		return "string"
+	case *ast.BooleanLiteral:
+		return "bool"
+	case *ast.ArrayLiteral:
+		if len(e.Elements) > 0 {
+			return "[" + sc.inferType(e.Elements[0]) + "]"
+		}
+		return "[]"
+	case *ast.MapLiteral:
+		return "map"
+	case *ast.Identifier:
+		if t, ok := sc.types[e.Value]; ok {
+			return t
+		}
+		return "unknown"
+	case *ast.BinaryExpression:
+		lt := sc.inferType(e.Left)
+		rt := sc.inferType(e.Right)
+		if e.Operator == "==" || e.Operator == "!=" || e.Operator == "<" || e.Operator == ">" || e.Operator == "<=" || e.Operator == ">=" {
+			return "bool"
+		}
+		if lt == "int" && rt == "int" {
+			return "int"
+		}
+		if lt == "string" || rt == "string" {
+			return "string"
+		}
+		return lt
+	default:
+		return "any"
+	}
 }

@@ -142,6 +142,8 @@ func (p *Parser) curPrecedence() int {
 
 func (p *Parser) ParseProgram() *ast.Program {
 	prog := &ast.Program{
+		Imports:      make([]*ast.ImportStatement, 0, 8),
+		Enums:        make([]*ast.EnumStatement, 0, 8),
 		Capabilities: make([]*ast.CapabilityStatement, 0, 8),
 		Structs:      make([]*ast.StructStatement, 0, 8),
 		Functions:    make([]*ast.FunctionStatement, 0, 16),
@@ -150,7 +152,17 @@ func (p *Parser) ParseProgram() *ast.Program {
 	}
 
 	for p.curToken.Type != lexer.EOF {
-		if p.curToken.Type == lexer.REQUIRE {
+		if p.curToken.Type == lexer.IMPORT {
+			imp := p.parseImportStatement()
+			if imp != nil {
+				prog.Imports = append(prog.Imports, imp)
+			}
+		} else if p.curToken.Type == lexer.ENUM {
+			enumStmt := p.parseEnumStatement()
+			if enumStmt != nil {
+				prog.Enums = append(prog.Enums, enumStmt)
+			}
+		} else if p.curToken.Type == lexer.REQUIRE {
 			capStmt := p.parseCapabilityStatement()
 			if capStmt != nil {
 				prog.Capabilities = append(prog.Capabilities, capStmt)
@@ -180,6 +192,63 @@ func (p *Parser) ParseProgram() *ast.Program {
 	}
 
 	return prog
+}
+
+func (p *Parser) parseImportStatement() *ast.ImportStatement {
+	stmt := &ast.ImportStatement{Token: p.curToken}
+	if p.peekToken.Type != lexer.STRING {
+		p.errors = append(p.errors, fmt.Sprintf("expected string path after import at %v", p.peekToken.Position))
+		return nil
+	}
+	p.nextToken()
+	stmt.Path = p.curToken.Literal
+	if p.peekToken.Type == lexer.SEMICOLON {
+		p.nextToken()
+	}
+	return stmt
+}
+
+func (p *Parser) parseEnumStatement() *ast.EnumStatement {
+	stmt := &ast.EnumStatement{Token: p.curToken, Variants: []*ast.EnumVariant{}}
+	if p.peekToken.Type != lexer.IDENT {
+		p.errors = append(p.errors, fmt.Sprintf("expected enum identifier at %v", p.peekToken.Position))
+		return nil
+	}
+	p.nextToken()
+	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	if p.peekToken.Type != lexer.LBRACE {
+		p.errors = append(p.errors, fmt.Sprintf("expected '{' after enum name at %v", p.peekToken.Position))
+		return nil
+	}
+	p.nextToken()
+
+	for p.peekToken.Type != lexer.RBRACE && p.peekToken.Type != lexer.EOF {
+		if p.peekToken.Type != lexer.IDENT {
+			break
+		}
+		p.nextToken()
+		v := &ast.EnumVariant{Name: &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}}
+		if p.peekToken.Type == lexer.LPAREN {
+			p.nextToken() // (
+			if p.peekToken.Type == lexer.IDENT {
+				p.nextToken()
+				v.Type = p.curToken.Literal
+			}
+			if p.peekToken.Type == lexer.RPAREN {
+				p.nextToken() // )
+			}
+		}
+		stmt.Variants = append(stmt.Variants, v)
+		if p.peekToken.Type == lexer.COMMA {
+			p.nextToken()
+		}
+	}
+
+	if p.peekToken.Type == lexer.RBRACE {
+		p.nextToken()
+	}
+	return stmt
 }
 
 func (p *Parser) parseStructStatement() *ast.StructStatement {
@@ -376,9 +445,49 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseIfStatement()
 	case lexer.FOR:
 		return p.parseForInStatement()
+	case lexer.MATCH:
+		return p.parseMatchStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
+}
+
+func (p *Parser) parseMatchStatement() *ast.MatchStatement {
+	stmt := &ast.MatchStatement{Token: p.curToken, Cases: []*ast.MatchCase{}}
+	p.nextToken()
+	stmt.Value = p.parseExpression(LOWEST)
+
+	if p.peekToken.Type != lexer.LBRACE {
+		p.errors = append(p.errors, fmt.Sprintf("expected '{' after match expression at %v", p.peekToken.Position))
+		return nil
+	}
+	p.nextToken() // cur at {
+
+	for p.peekToken.Type != lexer.RBRACE && p.peekToken.Type != lexer.EOF {
+		p.nextToken()
+		pattern := p.parseExpression(LOWEST)
+		if p.peekToken.Type == lexer.ARROW || p.peekToken.Literal == "=>" {
+			p.nextToken()
+		}
+		if p.peekToken.Type != lexer.LBRACE {
+			p.errors = append(p.errors, fmt.Sprintf("expected '{' in match case at %v", p.peekToken.Position))
+			break
+		}
+		p.nextToken()
+		caseBody := p.parseBlockStatement()
+		stmt.Cases = append(stmt.Cases, &ast.MatchCase{
+			Pattern: pattern,
+			Body:    caseBody,
+		})
+		if p.peekToken.Type == lexer.COMMA {
+			p.nextToken()
+		}
+	}
+
+	if p.peekToken.Type == lexer.RBRACE {
+		p.nextToken()
+	}
+	return stmt
 }
 
 func (p *Parser) parseSpawnStatement() *ast.SpawnStatement {

@@ -39,6 +39,9 @@ const (
 	SPAWN   TokenType = "SPAWN"
 	SEND    TokenType = "SEND"
 	RECEIVE TokenType = "RECEIVE"
+	IMPORT  TokenType = "IMPORT"
+	MATCH   TokenType = "MATCH"
+	ENUM    TokenType = "ENUM"
 
 	// Operators & Delimiters
 	ASSIGN   TokenType = "="
@@ -149,6 +152,10 @@ func (l *Lexer) NextToken() Token {
 			ch := l.ch
 			l.readChar()
 			tok = Token{Type: EQ, Literal: string(ch) + string(l.ch), Position: pos}
+		} else if l.peekChar() == '>' {
+			ch := l.ch
+			l.readChar()
+			tok = Token{Type: ARROW, Literal: string(ch) + string(l.ch), Position: pos}
 		} else {
 			tok = Token{Type: ASSIGN, Literal: string(l.ch), Position: pos}
 		}
@@ -307,6 +314,9 @@ var keywords = map[string]TokenType{
 	"spawn":   SPAWN,
 	"send":    SEND,
 	"receive": RECEIVE,
+	"import":  IMPORT,
+	"match":   MATCH,
+	"enum":    ENUM,
 
 	// Russian keywords (полная русскоязычная грамматика)
 	"требовать": REQUIRE,
@@ -336,6 +346,9 @@ var keywords = map[string]TokenType{
 	"послать":   SEND,
 	"получить":  RECEIVE,
 	"принять":   RECEIVE,
+	"импорт":    IMPORT,
+	"выбрать":   MATCH,
+	"перечисление": ENUM,
 }
 
 func LookupIdent(ident string) TokenType {

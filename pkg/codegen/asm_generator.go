@@ -537,5 +537,83 @@ axiom_runtime_vga_char:
     movb %dl, (%rdi)       # store ASCII character
     movb %cl, 1(%rdi)      # store color attribute
     ret
+
+# ==============================================================================
+# 🧠 Axiom Zero-GC Linear Arena Allocator (Mmap Page-Aligned Region)
+# ==============================================================================
+.section .bss
+.align 16
+axiom_arena_base: .quad 0
+axiom_arena_curr: .quad 0
+axiom_arena_end:  .quad 0
+
+.text
+# axiom_arena_init: initializes 16MB linear intent arena via sys_mmap (or returns existing)
+.global axiom_arena_init
+.type axiom_arena_init, @function
+axiom_arena_init:
+    pushq %rbp
+    movq %rsp, %rbp
+    movq axiom_arena_base(%rip), %rax
+    testq %rax, %rax
+    jnz .L_arena_ready
+
+    # sys_mmap(addr=0, len=16777216, prot=PROT_READ|PROT_WRITE, flags=MAP_PRIVATE|MAP_ANONYMOUS, fd=-1, off=0)
+    movq $9, %rax          # sys_mmap
+    xorq %rdi, %rdi        # addr = NULL
+    movq $16777216, %rsi   # 16 MB length
+    movq $3, %rdx          # PROT_READ | PROT_WRITE
+    movq $34, %r10         # MAP_PRIVATE | MAP_ANONYMOUS
+    movq $-1, %r8          # fd = -1
+    xorq %r9, %r9          # offset = 0
+    syscall
+
+    movq %rax, axiom_arena_base(%rip)
+    movq %rax, axiom_arena_curr(%rip)
+    addq $16777216, %rax
+    movq %rax, axiom_arena_end(%rip)
+
+.L_arena_ready:
+    leave
+    ret
+
+# axiom_arena_alloc: allocates %rdi bytes from the arena, returns pointer in %rax
+.global axiom_arena_alloc
+.type axiom_arena_alloc, @function
+axiom_arena_alloc:
+    pushq %rbp
+    movq %rsp, %rbp
+    pushq %rbx
+    call axiom_arena_init
+
+    # Align allocation to 16 bytes: size = (size + 15) & ~15
+    addq $15, %rdi
+    andq $-16, %rdi
+
+    movq axiom_arena_curr(%rip), %rax
+    movq %rax, %rbx
+    addq %rdi, %rbx
+    cmpq axiom_arena_end(%rip), %rbx
+    jg .L_arena_oom        # Out of arena memory
+
+    movq %rbx, axiom_arena_curr(%rip)
+    popq %rbx
+    leave
+    ret
+
+.L_arena_oom:
+    # Fallback return NULL
+    xorq %rax, %rax
+    popq %rbx
+    leave
+    ret
+
+# axiom_arena_reset: fast Zero-GC reset of all intent memory
+.global axiom_arena_reset
+.type axiom_arena_reset, @function
+axiom_arena_reset:
+    movq axiom_arena_base(%rip), %rax
+    movq %rax, axiom_arena_curr(%rip)
+    ret
 `)
 }
