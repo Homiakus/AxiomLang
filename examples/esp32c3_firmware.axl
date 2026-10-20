@@ -1,0 +1,44 @@
+// esp32c3_firmware.axl — Тестовая защищенная прошивка для ESP32-C3 (RISC-V 32 IMC)
+// Zero-Ambient Authority | Hardware MMIO | Zero Runtime
+
+require cap[Hardware.Port]
+require cap[Hardware.UART]
+require cap[Safety.Interlock]
+
+struct ESP32Health {
+    cycle_counter: int,
+    led_state: int,
+    status_code: int
+}
+
+// Запись в регистр конфигурации и управления пинами ESP32-C3
+// GPIO_OUT_W1TS_REG (0x60004008): Установить пин в HIGH
+// GPIO_OUT_W1TC_REG (0x6000400C): Сбросить пин в LOW
+// GPIO_ENABLE_W1TS_REG (0x60004024): Включить пин как OUTPUT
+fn esp32_gpio_enable(pin_mask: int) -> int {
+    mmio_write(1610629156, pin_mask); // 0x60004024
+    return 1;
+}
+
+fn esp32_led_on(pin_mask: int) -> int {
+    mmio_write(1610629128, pin_mask); // 0x60004008 (W1TS)
+    return 1;
+}
+
+fn esp32_led_off(pin_mask: int) -> int {
+    mmio_write(1610629132, pin_mask); // 0x6000400C (W1TC)
+    return 0;
+}
+
+intent "Инициализация подсистемы ввода/вывода ESP32-C3" {
+    // Безопасная инициализация GPIO8 (встроенный светодиод на большинстве плат ESP32-C3 SuperMini / DevKit)
+    // 1 << 8 = 256
+    let enabled = esp32_gpio_enable(256);
+}
+
+intent "Цикл защитной телеметрии и мигания LED" {
+    let health = { cycle_counter: 1, led_state: 1, status_code: 200 };
+    
+    // Включение светодиода
+    esp32_led_on(256);
+}
