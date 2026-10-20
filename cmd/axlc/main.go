@@ -24,7 +24,7 @@ func main() {
 	runMode := flag.Bool("run", false, "Compile and execute immediately")
 	protect := flag.Bool("protect", true, "Enable LWE topological knot anti-reverse-engineering")
 	healMode := flag.Bool("heal", true, "Enable embedded Neural-Symbolic AI code healing & auto-documentation")
-	target := flag.String("target", "native", "Compilation target: 'native' or 'baremetal-x86_64'")
+	target := flag.String("target", "native", "Compilation target: 'native', 'baremetal-x86_64', 'baremetal-armv7m', 'baremetal-cortexm0', 'baremetal-riscv32', 'baremetal-riscv64'")
 	emitLLVM := flag.Bool("emit-llvm", false, "Emit standalone freestanding LLVM IR (.ll) assembly")
 	guiPort := flag.Int("port", 8080, "Port for GUI Visual Designer Studio")
 	flag.Parse()
@@ -139,8 +139,22 @@ func main() {
 	}
 
 	// Step 5: Bare-Metal LLVM Generation
-	if *target == "baremetal-x86_64" || *emitLLVM {
-		llvmGen := llvm.NewLLVMGenerator(llvm.TargetX86_64BareMetal)
+	if strings.HasPrefix(*target, "baremetal-") || *emitLLVM {
+		var triple llvm.TargetTriple
+		switch *target {
+		case "baremetal-armv7m":
+			triple = llvm.TargetARMV7MBareMetal
+		case "baremetal-cortexm0":
+			triple = llvm.TargetCortexM0BareMetal
+		case "baremetal-riscv32":
+			triple = llvm.TargetRISCV32BareMetal
+		case "baremetal-riscv64":
+			triple = llvm.TargetRISCV64BareMetal
+		default:
+			triple = llvm.TargetX86_64BareMetal
+		}
+
+		llvmGen := llvm.NewLLVMGenerator(triple)
 		irCode := llvmGen.GenerateLLVMIR(prog)
 
 		err = os.WriteFile(*outPath, []byte(irCode), 0644)
@@ -148,7 +162,7 @@ func main() {
 			fmt.Printf(" [FATAL] Failed to write LLVM IR artifact: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf(" [AXLC] Freestanding Bare-Metal LLVM IR generated: %s (Zero Runtime/Zero OS)\n", *outPath)
+		fmt.Printf(" [AXLC] Freestanding Bare-Metal LLVM IR generated: %s (Target: %s, Zero Runtime/Zero OS)\n", *outPath, triple)
 		fmt.Println("--------------------------------------------------------------------------------")
 		return
 	}

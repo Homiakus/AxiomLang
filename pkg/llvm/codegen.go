@@ -14,6 +14,9 @@ const (
 	TargetX86_64BareMetal  TargetTriple = "x86_64-unknown-none-elf"
 	TargetAArch64BareMetal TargetTriple = "aarch64-unknown-none"
 	TargetRISCV64BareMetal TargetTriple = "riscv64gc-unknown-none-elf"
+	TargetRISCV32BareMetal TargetTriple = "riscv32imc-unknown-none-elf"
+	TargetARMV7MBareMetal  TargetTriple = "thumbv7em-none-eabihf"
+	TargetCortexM0BareMetal TargetTriple = "thumbv6m-none-eabi"
 )
 
 // LLVMGenerator translates Axiom AST directly into freestanding LLVM IR (no OS runtime required)
@@ -28,6 +31,12 @@ func NewLLVMGenerator(target TargetTriple) *LLVMGenerator {
 	dl := "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 	if target == TargetAArch64BareMetal {
 		dl = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128"
+	} else if target == TargetARMV7MBareMetal || target == TargetCortexM0BareMetal {
+		dl = "e-m:e-p:32:32-Fi8-i64:64-v128:64:128-a:0:32-n32-S64"
+	} else if target == TargetRISCV32BareMetal {
+		dl = "e-m:e-p:32:32-i64:64-n32-S128"
+	} else if target == TargetRISCV64BareMetal {
+		dl = "e-m:e-p:64:64-i64:64-i128:128-n32:64-S128"
 	}
 	return &LLVMGenerator{
 		target:     target,
@@ -181,7 +190,34 @@ func (g *LLVMGenerator) emitExpression(buf *bytes.Buffer, expr ast.Expression) s
 		fnName := e.Function.String()
 		if fnName == "print" || fnName == "outb" || fnName == "mmio_write" {
 			// Bare-metal hardware port write or memory mapped I/O
+			if fnName == "mmio_write" && len(e.Arguments) >= 2 {
+				addr := g.emitExpression(buf, e.Arguments[0])
+				val := g.emitExpression(buf, e.Arguments[1])
+				g.varCounter++
+				ptr := fmt.Sprintf("%%ptr%d", g.varCounter)
+				buf.WriteString(fmt.Sprintf("  %s = inttoptr i64 %s to i32*\n", ptr, addr))
+				buf.WriteString(fmt.Sprintf("  store volatile i32 %s, i32* %s, align 4\n", val, ptr))
+				return "0"
+			}
 			buf.WriteString(fmt.Sprintf("  ; Hardware Bare-Metal Action: %s\n", fnName))
+			return "0"
+		}
+		if fnName == "mmio_read" && len(e.Arguments) >= 1 {
+			addr := g.emitExpression(buf, e.Arguments[0])
+			g.varCounter++
+			ptr := fmt.Sprintf("%%ptr%d", g.varCounter)
+			buf.WriteString(fmt.Sprintf("  %s = inttoptr i64 %s to i32*\n", ptr, addr))
+			g.varCounter++
+			tmp := fmt.Sprintf("%%t%d", g.varCounter)
+			buf.WriteString(fmt.Sprintf("  %s = load volatile i32, i32* %s, align 4\n", tmp, ptr))
+			return tmp
+		}
+		if fnName == "enable_interrupts" || fnName == "mcu.enable_irq" {
+			buf.WriteString("  call void asm sideeffect \"cpsie i\", \"~{memory}\"() nounwind\n")
+			return "0"
+		}
+		if fnName == "disable_interrupts" || fnName == "mcu.disable_irq" {
+			buf.WriteString("  call void asm sideeffect \"cpsid i\", \"~{memory}\"() nounwind\n")
 			return "0"
 		}
 		if fnName == "gui.draw_pixel" || fnName == "draw_pixel" {

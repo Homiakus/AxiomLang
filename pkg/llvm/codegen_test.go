@@ -57,3 +57,47 @@ intent "Инициализация ядерных структур и памят
 		t.Fatalf("missing bare-metal VGA text routine in LLVM IR")
 	}
 }
+
+func TestLLVMGenerator_EmbeddedMCUTargets(t *testing.T) {
+	input := `
+require cap[Hardware.Port]
+
+fn gpio_write(pin: int, val: int) -> int {
+    mmio_write(1073807360, val);
+    return mmio_read(1073807360);
+}
+
+intent "MCU Peripheral and Interrupt Loop" {
+    mcu.disable_irq();
+    gpio_write(13, 1);
+    mcu.enable_irq();
+}
+`
+	l := lexer.New(input)
+	p := parser.New(l)
+	prog := p.ParseProgram()
+
+	if len(p.Errors()) > 0 {
+		t.Fatalf("parser errors: %v", p.Errors())
+	}
+
+	// Test Cortex-M / Thumb
+	genARM := llvm.NewLLVMGenerator(llvm.TargetARMV7MBareMetal)
+	irARM := genARM.GenerateLLVMIR(prog)
+	if !strings.Contains(irARM, "thumbv7em-none-eabihf") {
+		t.Fatalf("missing Cortex-M thumbv7em target triple")
+	}
+	if !strings.Contains(irARM, "store volatile i32") || !strings.Contains(irARM, "load volatile i32") {
+		t.Fatalf("missing MMIO volatile operations in generated LLVM IR")
+	}
+	if !strings.Contains(irARM, "cpsie i") || !strings.Contains(irARM, "cpsid i") {
+		t.Fatalf("missing IRQ enable/disable intrinsics")
+	}
+
+	// Test RISC-V 32 IMC
+	genRV32 := llvm.NewLLVMGenerator(llvm.TargetRISCV32BareMetal)
+	irRV32 := genRV32.GenerateLLVMIR(prog)
+	if !strings.Contains(irRV32, "riscv32imc-unknown-none-elf") {
+		t.Fatalf("missing RISC-V 32 target triple")
+	}
+}

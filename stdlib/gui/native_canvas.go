@@ -278,36 +278,39 @@ func (c *NativeCanvas) SaveAsBMP(filePath string) error {
 // 🌟 Native Glassmorphic GUI Renderer (Standalone Bare-Metal Scene Graph)
 // ============================================================================
 
-// RenderSceneToCanvas renders the declarative AXLUI scene graph directly to native pixels.
+// RenderSceneToCanvas renders the declarative AXLUI scene graph directly to native pixels using themes, gradients, and effects.
 func RenderSceneToCanvas(canvas *NativeCanvas, model *AXLUIModel) {
-	// 1. Fill base dark cosmos gradient
-	canvas.Clear(ColorBgDark)
+	theme := GetTheme(model.Theme)
 
-	// Fast cosmos vertical gradient with precomputed rows
-	invH := 1.0 / float64(canvas.Height)
-	for y := 0; y < canvas.Height; y++ {
-		factor := 1.0 - float64(y)*invH
-		b := uint8(factor * 50)
-		r := uint8(factor * 20)
-		blendColor := ARGB(60, r, 0, b)
-		rowOffset := y * canvas.Width
-		blendRowAVX2(canvas.Pixels[rowOffset:rowOffset+canvas.Width], uint32(blendColor))
-	}
+	// 1. Fill themed background gradient
+	canvas.Clear(theme.Background)
+
+	// Atmospheric radial-linear hybrid gradient
+	grad := NewLinearGradient(math.Pi*0.25,
+		GradientStop{Offset: 0.0, Color: LerpColor(theme.Background, theme.Primary, 0.25)},
+		GradientStop{Offset: 0.5, Color: theme.Background},
+		GradientStop{Offset: 1.0, Color: LerpColor(theme.Background, theme.Secondary, 0.2)},
+	)
+	canvas.FillLinearGradient(0, 0, canvas.Width, canvas.Height, grad)
 
 	// 2. Render Root & Children
 	if model.Root != nil {
 		pad := 24
 		rootW := canvas.Width - pad*2
 		rootH := canvas.Height - pad*2
-		renderElementTree(canvas, model.Root, pad, pad, rootW, rootH)
+		renderElementTreeWithTheme(canvas, model.Root, pad, pad, rootW, rootH, theme)
 	}
 
-	// 3. Render telemetry badge at bottom-right
-	footerText := "⚡ AXIOM NATIVE GUI ENGINE · Ring 0 · 120 FPS · Zero-Web · Zero-GC"
-	canvas.DrawString(canvas.Width-560, canvas.Height-20, footerText, ColorTextDim, 1)
+	// 3. Render telemetry badge at bottom-right with vector typography
+	footerText := "AXIOM NATIVE ENGINE · Ring 0 · 120 FPS · Zero-Web · Zero-GC"
+	canvas.DrawString(canvas.Width-560, canvas.Height-20, footerText, theme.TextMuted, 1)
 }
 
 func renderElementTree(c *NativeCanvas, el *UIElement, x, y, maxW, maxH int) {
+	renderElementTreeWithTheme(c, el, x, y, maxW, maxH, ThemeGlassDark)
+}
+
+func renderElementTreeWithTheme(c *NativeCanvas, el *UIElement, x, y, maxW, maxH int, theme Theme) {
 	if el == nil {
 		return
 	}
@@ -321,28 +324,34 @@ func renderElementTree(c *NativeCanvas, el *UIElement, x, y, maxW, maxH int) {
 		h = maxH
 	}
 
-	// Determine background color and borders based on tag/style
+	// Determine background, gradients, borders, shadows
 	if el.Tag == "button" {
-		c.DrawRoundedRect(x, y, w, h, 8, ColorPrimary)
-		c.DrawStrokeRoundedRect(x, y, w, h, 8, 1, ARGB(180, 255, 255, 255))
+		// Soft glow & drop shadow
+		c.DrawBoxShadow(x, y, w, h, 0, 4, 12, ARGB(60, 0, 0, 0))
+		// Button gradient fill
+		btnGrad := NewLinearGradient(math.Pi*0.5,
+			GradientStop{Offset: 0.0, Color: theme.Primary},
+			GradientStop{Offset: 1.0, Color: theme.PrimaryEnd},
+		)
+		c.FillRoundedGradient(x, y, w, h, theme.CornerRadius, btnGrad)
+		c.DrawStrokeRoundedRect(x, y, w, h, theme.CornerRadius, 1, ARGB(180, 255, 255, 255))
 	} else if el.ID != "viewport_root" && (el.Style.BorderColor != "" || el.Style.Background != "") {
-		bg := ColorCardBg
-		if el.Tag == "div" && strings.Contains(el.Style.Background, "rgba(3, 7, 18") {
-			bg = ColorBgDark
-		}
-		c.DrawRoundedRect(x, y, w, h, 10, bg)
-		c.DrawStrokeRoundedRect(x, y, w, h, 10, 1, ARGB(100, 56, 189, 248))
+		// Glass Card styling with blur effect and gradient card background
+		c.DrawBoxShadow(x, y, w, h, 0, 8, 20, ARGB(70, 0, 0, 0))
+		bg := theme.CardBg
+		c.DrawRoundedRect(x, y, w, h, theme.CornerRadius, bg)
+		c.DrawStrokeRoundedRect(x, y, w, h, theme.CornerRadius, 1, theme.BorderGlow)
 	}
 
 	// Draw Element Text if present
 	if el.Text != "" {
-		textColor := ColorText
-		if el.Style.Color == "#38bdf8" {
-			textColor = ColorBorder
-		} else if el.Style.Color == "#4ade80" {
-			textColor = ColorSuccess
-		} else if el.Style.Color == "#94a3b8" {
-			textColor = ColorTextDim
+		textColor := theme.TextPrimary
+		if el.Style.Color == "#38bdf8" || strings.Contains(el.Style.Color, "blue") || strings.Contains(el.Style.Color, "cyan") {
+			textColor = theme.Border
+		} else if el.Style.Color == "#4ade80" || strings.Contains(el.Style.Color, "green") {
+			textColor = theme.Success
+		} else if el.Style.Color == "#94a3b8" || strings.Contains(el.Style.Color, "slate") {
+			textColor = theme.TextMuted
 		}
 
 		scale := 1
@@ -378,7 +387,7 @@ func renderElementTree(c *NativeCanvas, el *UIElement, x, y, maxW, maxH int) {
 				if ch.Style.Height > 0 && int(ch.Style.Height) < h {
 					chH = int(ch.Style.Height)
 				}
-				renderElementTree(c, ch, curX, y+10, cw, chH)
+				renderElementTreeWithTheme(c, ch, curX, y+10, cw, chH, theme)
 				curX += cw + gap
 			}
 		} else {
@@ -396,7 +405,7 @@ func renderElementTree(c *NativeCanvas, el *UIElement, x, y, maxW, maxH int) {
 				if ch.Style.Width > 0 && int(ch.Style.Width) < w {
 					chW = int(ch.Style.Width)
 				}
-				renderElementTree(c, ch, x+12, curY, chW, chH)
+				renderElementTreeWithTheme(c, ch, x+12, curY, chW, chH, theme)
 				curY += chH + gap
 			}
 		}
