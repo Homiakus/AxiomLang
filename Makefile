@@ -2,7 +2,8 @@
 
 .PHONY: all build install test clean run-examples
 
-BIN_NAME = axlc
+BIN_DIR = bin
+BIN_NAME = $(BIN_DIR)/axlc
 SRC = cmd/axlc/main.go
 INSTALL_PREFIX ?= /usr/local/bin
 
@@ -10,12 +11,13 @@ all: build test
 
 build:
 	@echo "==> Building $(BIN_NAME)..."
+	@mkdir -p $(BIN_DIR)
 	go build -ldflags="-s -w" -o $(BIN_NAME) $(SRC)
 
 install: build
 	@echo "==> Installing $(BIN_NAME) to $(INSTALL_PREFIX)..."
-	sudo cp $(BIN_NAME) $(INSTALL_PREFIX)/$(BIN_NAME)
-	sudo chmod +x $(INSTALL_PREFIX)/$(BIN_NAME)
+	sudo cp $(BIN_NAME) $(INSTALL_PREFIX)/axlc
+	sudo chmod +x $(INSTALL_PREFIX)/axlc
 
 test:
 	@echo "==> Running all AxiomLang unit test suites..."
@@ -23,7 +25,7 @@ test:
 
 clean:
 	@echo "==> Cleaning build artifacts..."
-	rm -f $(BIN_NAME) $(BIN_NAME).exe
+	rm -rf $(BIN_DIR)/* build/
 
 run-examples: build
 	@echo "==> Executing example suite..."

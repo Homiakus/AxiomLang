@@ -41,7 +41,10 @@ func main() {
 	fmt.Println("================================================================================")
 
 	baseURL := "http://127.0.0.1:18080"
-	uiFile := "scannerpro.axlui"
+	uiFile := "examples/scannerpro.axlui"
+	if _, err := os.Stat(uiFile); os.IsNotExist(err) {
+		uiFile = "scannerpro.axlui"
+	}
 
 	model, err := gui.LoadAXLUI(uiFile)
 	if err != nil {
