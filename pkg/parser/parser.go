@@ -22,6 +22,7 @@ type Parser struct {
 const (
 	_ int = iota
 	LOWEST
+	RANGE_PREC  // ..
 	EQUALS      // == or !=
 	LESSGREATER // > or < or <= or >=
 	SUM         // + or -
@@ -73,6 +74,8 @@ func (p *Parser) parseInfix(tokenType lexer.TokenType, left ast.Expression) ast.
 	case lexer.PLUS, lexer.MINUS, lexer.SLASH, lexer.ASTERISK,
 		lexer.EQ, lexer.NOT_EQ, lexer.LT, lexer.LTE, lexer.GT, lexer.GTE:
 		return p.parseInfixExpression(left)
+	case lexer.RANGE:
+		return p.parseRangeExpression(left)
 	case lexer.LPAREN:
 		return p.parseCallExpression(left)
 	case lexer.DOT:
@@ -82,10 +85,22 @@ func (p *Parser) parseInfix(tokenType lexer.TokenType, left ast.Expression) ast.
 	}
 }
 
+func (p *Parser) parseRangeExpression(left ast.Expression) ast.Expression {
+	tok := p.curToken
+	p.nextToken()
+	right := p.parseExpression(RANGE_PREC)
+	return &ast.RangeExpression{
+		Token: tok,
+		Start: left,
+		End:   right,
+	}
+}
+
 func (p *Parser) isInfixToken(tokenType lexer.TokenType) bool {
 	switch tokenType {
 	case lexer.PLUS, lexer.MINUS, lexer.SLASH, lexer.ASTERISK,
 		lexer.EQ, lexer.NOT_EQ, lexer.LT, lexer.LTE, lexer.GT, lexer.GTE,
+		lexer.RANGE,
 		lexer.LPAREN, lexer.DOT:
 		return true
 	default:
@@ -104,6 +119,8 @@ func (p *Parser) Errors() []string {
 
 func (p *Parser) peekPrecedence() int {
 	switch p.peekToken.Type {
+	case lexer.RANGE:
+		return RANGE_PREC
 	case lexer.EQ, lexer.NOT_EQ:
 		return EQUALS
 	case lexer.LT, lexer.GT, lexer.LTE, lexer.GTE:
@@ -123,6 +140,8 @@ func (p *Parser) peekPrecedence() int {
 
 func (p *Parser) curPrecedence() int {
 	switch p.curToken.Type {
+	case lexer.RANGE:
+		return RANGE_PREC
 	case lexer.EQ, lexer.NOT_EQ:
 		return EQUALS
 	case lexer.LT, lexer.GT, lexer.LTE, lexer.GTE:

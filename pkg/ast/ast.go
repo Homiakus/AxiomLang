@@ -484,3 +484,25 @@ func (pe *PrefixExpression) String() string {
 	return fmt.Sprintf("(%s%s)", pe.Operator, pe.Right.String())
 }
 
+// RangeExpression represents start..end (e.g. 0..10)
+type RangeExpression struct {
+	Token    lexer.Token // '..'
+	Start    Expression
+	End      Expression
+}
+
+func (re *RangeExpression) expressionNode()      {}
+func (re *RangeExpression) TokenLiteral() string { return re.Token.Literal }
+func (re *RangeExpression) String() string {
+	startStr := ""
+	if re.Start != nil {
+		startStr = re.Start.String()
+	}
+	endStr := ""
+	if re.End != nil {
+		endStr = re.End.String()
+	}
+	return fmt.Sprintf("%s..%s", startStr, endStr)
+}
+
+

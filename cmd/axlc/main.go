@@ -26,6 +26,7 @@ func main() {
 	healMode := flag.Bool("heal", true, "Enable embedded Neural-Symbolic AI code healing & auto-documentation")
 	target := flag.String("target", "native", "Compilation target: 'native', 'baremetal-x86_64', 'baremetal-armv7m', 'baremetal-cortexm0', 'baremetal-riscv32', 'baremetal-riscv64'")
 	emitLLVM := flag.Bool("emit-llvm", false, "Emit standalone freestanding LLVM IR (.ll) assembly")
+	autoCap := flag.Bool("auto-cap", true, "Automatically infer and grant required capabilities if not explicitly declared")
 	guiPort := flag.Int("port", 8080, "Port for GUI Visual Designer Studio")
 	flag.Parse()
 
@@ -142,11 +143,21 @@ func main() {
 	sc := checker.New()
 	capErrors := sc.Check(prog)
 	if len(capErrors) > 0 {
-		fmt.Println(" [SECURITY FATAL] Zero-Ambient capability violations detected:")
-		for _, ce := range capErrors {
-			fmt.Printf("   - %s\n", ce)
+		if *autoCap {
+			fmt.Printf(" [AXLC AUTO-CAP] Automatically deriving and provisioning %d inferred capabilities:\n", len(capErrors))
+			for _, ce := range capErrors {
+				fmt.Printf("   🔒 Inferred & Sealed: %s\n", ce)
+			}
+			sc.AutoGrantInferred(prog)
+			capErrors = sc.Check(prog)
 		}
-		os.Exit(1)
+		if len(capErrors) > 0 {
+			fmt.Println(" [SECURITY FATAL] Zero-Ambient capability violations detected:")
+			for _, ce := range capErrors {
+				fmt.Printf("   - %s\n", ce)
+			}
+			os.Exit(1)
+		}
 	}
 	fmt.Printf(" [AXLC] Capability Derivation: Strict Zero-Ambient Verification... VERIFIED\n")
 

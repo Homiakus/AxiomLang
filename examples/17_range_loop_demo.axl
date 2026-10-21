@@ -1,0 +1,10 @@
+// 17_range_loop_demo.axl — Диапазоны (Ranges) в AxiomLang v3
+
+require cap[Console.Out]
+
+intent "Демонстрация диапазонных циклов 0..N" {
+    print("Цикл по диапазону 0..5:")
+    for i in 0..5 {
+        print(i)
+    }
+}

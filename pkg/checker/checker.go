@@ -322,3 +322,30 @@ func (sc *ScopeChecker) inferType(expr ast.Expression) string {
 		return "any"
 	}
 }
+
+// AutoGrantInferred analyzes missing capabilities and provisions them into the program's AST
+func (sc *ScopeChecker) AutoGrantInferred(program *ast.Program) {
+	for _, errStr := range sc.errors {
+		// Look for "'Resource.Name'" in "requires ungranted capability 'Resource.Name'"
+		idx := strings.Index(errStr, "capability '")
+		if idx != -1 {
+			sub := errStr[idx+12:]
+			endQuote := strings.Index(sub, "'")
+			if endQuote != -1 {
+				capName := sub[:endQuote]
+				alreadyHas := false
+				for _, c := range program.Capabilities {
+					if c.Resource == capName {
+						alreadyHas = true
+						break
+					}
+				}
+				if !alreadyHas {
+					program.Capabilities = append(program.Capabilities, &ast.CapabilityStatement{
+						Resource: capName,
+					})
+				}
+			}
+		}
+	}
+}

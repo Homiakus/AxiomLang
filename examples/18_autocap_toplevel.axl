@@ -1,0 +1,8 @@
+// 18_autocap_toplevel.axl — Максимально простой синтаксис AxiomLang v3
+// Без явного 'require cap' и без явного 'intent'
+
+print("Привет! Это код на AxiomLang v3 без единого ключевого слова require или intent!")
+
+for step in 0..3 {
+    print(step)
+}

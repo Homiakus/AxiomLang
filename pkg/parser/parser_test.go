@@ -55,3 +55,30 @@ intent "Сохранение настроек" {
 		t.Fatalf("expected let variable name 'payload', got %s", letStmt.Name.Value)
 	}
 }
+
+func TestParser_RangeExpression(t *testing.T) {
+	input := `
+intent "test range" {
+    for i in 0..10 {
+        print(i)
+    }
+}
+`
+	l := lexer.New(input)
+	p := parser.New(l)
+	prog := p.ParseProgram()
+	if len(p.Errors()) > 0 {
+		t.Fatalf("parser errors: %v", p.Errors())
+	}
+	if len(prog.Intents) != 1 {
+		t.Fatalf("expected 1 intent, got %d", len(prog.Intents))
+	}
+	stmt := prog.Intents[0].Body.Statements[0].(*ast.ForInStatement)
+	rangeExp, ok := stmt.Collection.(*ast.RangeExpression)
+	if !ok {
+		t.Fatalf("expected RangeExpression, got %T", stmt.Collection)
+	}
+	if rangeExp.String() != "0..10" {
+		t.Fatalf("expected '0..10', got %q", rangeExp.String())
+	}
+}

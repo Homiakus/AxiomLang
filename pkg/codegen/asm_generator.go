@@ -252,8 +252,36 @@ func (g *AsmGenerator) emitStatement(buf *bytes.Buffer, stmt ast.Statement) {
 		buf.WriteString(fmt.Sprintf("%s:\n", endLbl))
 
 	case *ast.ForInStatement:
-		// For-in loop over array literal
-		if arr, ok := s.Collection.(*ast.ArrayLiteral); ok {
+		// For-in loop over RangeExpression (e.g., 0..10)
+		if rng, ok := s.Collection.(*ast.RangeExpression); ok {
+			startReg := g.emitExpression(buf, rng.Start)
+			g.stackOffset += 8
+			iterOffset := g.stackOffset
+			g.localVars[s.Item.Value] = iterOffset
+			buf.WriteString(fmt.Sprintf("    movq %s, -%d(%%rbp)\n", startReg, iterOffset))
+
+			endReg := g.emitExpression(buf, rng.End)
+			g.stackOffset += 8
+			endOffset := g.stackOffset
+			buf.WriteString(fmt.Sprintf("    movq %s, -%d(%%rbp)\n", endReg, endOffset))
+
+			loopStart := g.newLabel("for_range_start")
+			loopEnd := g.newLabel("for_range_end")
+
+			buf.WriteString(fmt.Sprintf("%s:\n", loopStart))
+			buf.WriteString(fmt.Sprintf("    movq -%d(%%rbp), %%rax\n", iterOffset))
+			buf.WriteString(fmt.Sprintf("    cmpq -%d(%%rbp), %%rax\n", endOffset))
+			buf.WriteString(fmt.Sprintf("    jge %s\n", loopEnd))
+
+			for _, subStmt := range s.Body.Statements {
+				g.emitStatement(buf, subStmt)
+			}
+
+			buf.WriteString(fmt.Sprintf("    incq -%d(%%rbp)\n", iterOffset))
+			buf.WriteString(fmt.Sprintf("    jmp %s\n", loopStart))
+			buf.WriteString(fmt.Sprintf("%s:\n", loopEnd))
+		} else if arr, ok := s.Collection.(*ast.ArrayLiteral); ok {
+			// For-in loop over array literal
 			for _, elem := range arr.Elements {
 				reg := g.emitExpression(buf, elem)
 				g.stackOffset += 8

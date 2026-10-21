@@ -2,12 +2,12 @@
 bin/
 build/
 *.exe
-axlc
-axiom_lsp
-demo_graphics
-my_app
-scanner_axiom_gui
-scannerpro_axiom
+/axlc
+/axiom_lsp
+/demo_graphics
+/my_app
+/scanner_axiom_gui
+/scannerpro_axiom
 
 # Rendered framebuffers & images
 *.bmp
