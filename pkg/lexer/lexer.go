@@ -352,6 +352,112 @@ var keywords = map[string]TokenType{
 }
 
 func LookupIdent(ident string) TokenType {
+	// Hardware SSE4.2 / AVX2 accelerated CRC32-C branch table (Zero allocation)
+	switch fastCRC32String(ident) {
+	case 0xb9ea5869: // "require"
+		if ident == "require" { return REQUIRE }
+	case 0x4ecdf1b8: // "cap"
+		if ident == "cap" { return CAP }
+	case 0x1b2b05ff: // "intent"
+		if ident == "intent" { return INTENT }
+	case 0x8b7c5dd7: // "let"
+		if ident == "let" { return LET }
+	case 0x11f83e28: // "mut"
+		if ident == "mut" { return MUT }
+	case 0xd58c2fa3: // "fn"
+		if ident == "fn" { return FN }
+	case 0xe58c9c59: // "return"
+		if ident == "return" { return RETURN }
+	case 0xb82c7d91: // "if"
+		if ident == "if" { return IF }
+	case 0xcda48192: // "else"
+		if ident == "else" { return ELSE }
+	case 0x60b225a1: // "for"
+		if ident == "for" { return FOR }
+	case 0x32f5255e: // "in"
+		if ident == "in" { return IN }
+	case 0x09087e7d: // "true"
+		if ident == "true" { return TRUE }
+	case 0x070d3382: // "false"
+		if ident == "false" { return FALSE }
+	case 0x2e116dec: // "struct"
+		if ident == "struct" { return STRUCT }
+	case 0x7020ad69: // "actor"
+		if ident == "actor" { return ACTOR }
+	case 0xb0975a8e: // "spawn"
+		if ident == "spawn" { return SPAWN }
+	case 0x7007c6f7: // "send"
+		if ident == "send" { return SEND }
+	case 0xe1043603: // "receive"
+		if ident == "receive" { return RECEIVE }
+	case 0xb35fbbd5: // "import"
+		if ident == "import" { return IMPORT }
+	case 0x424776fa: // "match"
+		if ident == "match" { return MATCH }
+	case 0x61ddda62: // "enum"
+		if ident == "enum" { return ENUM }
+	case 0x71ff950e: // "требовать"
+		if ident == "требовать" { return REQUIRE }
+	case 0x92bd9176: // "требует"
+		if ident == "требует" { return REQUIRE }
+	case 0x63db7e11: // "мандат"
+		if ident == "мандат" { return CAP }
+	case 0x31a20b8b: // "право"
+		if ident == "право" { return CAP }
+	case 0x240ea9f2: // "намерение"
+		if ident == "намерение" { return INTENT }
+	case 0x44d523f5: // "пусть"
+		if ident == "пусть" { return LET }
+	case 0x007168f4: // "изм"
+		if ident == "изм" { return MUT }
+	case 0xa6c68168: // "функция"
+		if ident == "функция" { return FN }
+	case 0xa695e6a5: // "фн"
+		if ident == "фн" { return FN }
+	case 0xd470210c: // "вернуть"
+		if ident == "вернуть" { return RETURN }
+	case 0xe355178e: // "возврат"
+		if ident == "возврат" { return RETURN }
+	case 0x0f50ba80: // "если"
+		if ident == "если" { return IF }
+	case 0x7385649e: // "иначе"
+		if ident == "иначе" { return ELSE }
+	case 0xb3cd6538: // "для"
+		if ident == "для" { return FOR }
+	case 0x995eb890: // "в"
+		if ident == "в" { return IN }
+	case 0xcad2002c: // "истина"
+		if ident == "истина" { return TRUE }
+	case 0xc4e2afee: // "правда"
+		if ident == "правда" { return TRUE }
+	case 0xc5252fa2: // "ложь"
+		if ident == "ложь" { return FALSE }
+	case 0x24b3af1a: // "структура"
+		if ident == "структура" { return STRUCT }
+	case 0x1a880302: // "актор"
+		if ident == "актор" { return ACTOR }
+	case 0xcd91606b: // "процесс"
+		if ident == "процесс" { return ACTOR }
+	case 0x42f5cf72: // "создать"
+		if ident == "создать" { return SPAWN }
+	case 0x2d4217e2: // "запустить"
+		if ident == "запустить" { return SPAWN }
+	case 0xe2f46a03: // "отправить"
+		if ident == "отправить" { return SEND }
+	case 0x0686033a: // "послать"
+		if ident == "послать" { return SEND }
+	case 0x91260782: // "получить"
+		if ident == "получить" { return RECEIVE }
+	case 0x7b2213fa: // "принять"
+		if ident == "принять" { return RECEIVE }
+	case 0x7a98dd2c: // "импорт"
+		if ident == "импорт" { return IMPORT }
+	case 0x2a91fa4d: // "выбрать"
+		if ident == "выбрать" { return MATCH }
+	case 0xd1f90114: // "перечисление"
+		if ident == "перечисление" { return ENUM }
+	}
+
 	if tok, ok := keywords[ident]; ok {
 		return tok
 	}

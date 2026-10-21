@@ -60,3 +60,17 @@ func BenchmarkDataFrame_SumInt64_AVX2(b *testing.B) {
 		_, _ = df.SumInt64("large")
 	}
 }
+
+func TestDataFrame_MinMaxFloat64_SIMD(t *testing.T) {
+	df := data.NewDataFrame()
+	vals := []float64{12.5, -45.2, 99.1, 0.0, 1024.75, -500.5, 33.3}
+	df.AddFloat64Column("temperatures", vals)
+
+	minV, maxV, err := df.MinMaxFloat64("temperatures")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if minV != -500.5 || maxV != 1024.75 {
+		t.Fatalf("expected min=-500.5, max=1024.75, got min=%v, max=%v", minV, maxV)
+	}
+}

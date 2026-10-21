@@ -86,3 +86,46 @@ func (df *DataFrame) SumInt64(colName string) (int64, error) {
 	}
 	return 0, fmt.Errorf("E_COLUMN_NOT_FOUND: column %s missing", colName)
 }
+
+func (df *DataFrame) AddFloat64Column(name string, values []float64) {
+	df.mu.Lock()
+	defer df.mu.Unlock()
+
+	n := len(values)
+	byteLen := n * 8
+	data := make([]byte, byteLen)
+	if n > 0 {
+		src := unsafe.Slice((*byte)(unsafe.Pointer(&values[0])), byteLen)
+		copy(data, src)
+	}
+
+	df.Columns = append(df.Columns, Column{
+		Name:  name,
+		Type:  TypeFloat64,
+		Data:  data,
+		Count: n,
+	})
+	if n > df.Rows {
+		df.Rows = n
+	}
+}
+
+func (df *DataFrame) MinMaxFloat64(colName string) (float64, float64, error) {
+	df.mu.RLock()
+	defer df.mu.RUnlock()
+
+	for _, col := range df.Columns {
+		if col.Name == colName {
+			if col.Type != TypeFloat64 {
+				return 0, 0, errors.New("E_TYPE_MISMATCH: column is not of type Float64")
+			}
+			if col.Count == 0 || len(col.Data) < col.Count*8 {
+				return 0, 0, nil
+			}
+			floatSlice := unsafe.Slice((*float64)(unsafe.Pointer(&col.Data[0])), col.Count)
+			minV, maxV := minMaxFloat64Asm(floatSlice)
+			return minV, maxV, nil
+		}
+	}
+	return 0, 0, fmt.Errorf("E_COLUMN_NOT_FOUND: column %s missing", colName)
+}

@@ -68,3 +68,46 @@ scalar_loop:
 done:
 	MOVQ AX, ret+24(FP)
 	RET
+
+// func minMaxFloat64Asm(data []float64) (float64, float64)
+// data_base+0(FP): *float64
+// data_len+8(FP):  int
+// data_cap+16(FP): int
+// ret+24(FP):      float64
+// ret1+32(FP):     float64
+TEXT ·minMaxFloat64Asm(SB), NOSPLIT, $0-40
+	MOVQ data_base+0(FP), SI
+	MOVQ data_len+8(FP), CX
+
+	TESTQ CX, CX
+	JLE zero_out
+
+	// Initialize min/max from first element
+	VMOVSD (SI), X0 // X0: min
+	VMOVSD (SI), X1 // X1: max
+
+	ADDQ $8, SI
+	DECQ CX
+
+loop_minmax:
+	TESTQ CX, CX
+	JLE done_minmax
+
+	VMOVSD (SI), X2
+	VMINSD X2, X0, X0
+	VMAXSD X2, X1, X1
+
+	ADDQ $8, SI
+	DECQ CX
+	JMP loop_minmax
+
+done_minmax:
+	VMOVSD X0, ret+24(FP)
+	VMOVSD X1, ret1+32(FP)
+	RET
+
+zero_out:
+	VXORPD X0, X0, X0
+	VMOVSD X0, ret+24(FP)
+	VMOVSD X0, ret1+32(FP)
+	RET
