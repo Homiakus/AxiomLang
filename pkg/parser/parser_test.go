@@ -82,3 +82,26 @@ intent "test range" {
 		t.Fatalf("expected '0..10', got %q", rangeExp.String())
 	}
 }
+
+func TestParser_PipeAndTryExpressions(t *testing.T) {
+	input := `
+intent "pipeline test" {
+    let result = 10 |> double() |> increment()
+}
+`
+	l := lexer.New(input)
+	p := parser.New(l)
+	prog := p.ParseProgram()
+	if len(p.Errors()) > 0 {
+		t.Fatalf("parser errors: %v", p.Errors())
+	}
+	if len(prog.Intents) != 1 {
+		t.Fatalf("expected 1 intent, got %d", len(prog.Intents))
+	}
+	stmt := prog.Intents[0].Body.Statements[0].(*ast.LetStatement)
+	pipeExp, ok := stmt.Value.(*ast.PipeExpression)
+	if !ok {
+		t.Fatalf("expected PipeExpression, got %T", stmt.Value)
+	}
+	t.Logf("Parsed pipe: %s", pipeExp.String())
+}

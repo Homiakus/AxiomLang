@@ -505,4 +505,30 @@ func (re *RangeExpression) String() string {
 	return fmt.Sprintf("%s..%s", startStr, endStr)
 }
 
+// PipeExpression represents value |> function(args...)
+type PipeExpression struct {
+	Token    lexer.Token // '|>'
+	Left     Expression
+	Right    Expression  // CallExpression or Identifier
+}
+
+func (pe *PipeExpression) expressionNode()      {}
+func (pe *PipeExpression) TokenLiteral() string { return pe.Token.Literal }
+func (pe *PipeExpression) String() string {
+	return fmt.Sprintf("(%s |> %s)", pe.Left.String(), pe.Right.String())
+}
+
+// TryExpression represents expr?
+type TryExpression struct {
+	Token    lexer.Token // '?'
+	Value    Expression
+}
+
+func (te *TryExpression) expressionNode()      {}
+func (te *TryExpression) TokenLiteral() string { return te.Token.Literal }
+func (te *TryExpression) String() string {
+	return fmt.Sprintf("%s?", te.Value.String())
+}
+
+
 

@@ -63,6 +63,8 @@ const (
 	COLON     TokenType = ":"
 	DOT       TokenType = "."
 	RANGE     TokenType = ".."
+	PIPE      TokenType = "|>"
+	QUESTION  TokenType = "?"
 
 	LPAREN   TokenType = "("
 	RPAREN   TokenType = ")"
@@ -211,6 +213,16 @@ func (l *Lexer) NextToken() Token {
 			tok = Token{Type: RANGE, Literal: string(ch) + string(l.ch), Position: pos}
 		} else {
 			tok = Token{Type: DOT, Literal: string(l.ch), Position: pos}
+		}
+	case '?':
+		tok = Token{Type: QUESTION, Literal: string(l.ch), Position: pos}
+	case '|':
+		if l.peekChar() == '>' {
+			ch := l.ch
+			l.readChar()
+			tok = Token{Type: PIPE, Literal: string(ch) + string(l.ch), Position: pos}
+		} else {
+			tok = Token{Type: ILLEGAL, Literal: string(l.ch), Position: pos}
 		}
 	case '(':
 		tok = Token{Type: LPAREN, Literal: string(l.ch), Position: pos}

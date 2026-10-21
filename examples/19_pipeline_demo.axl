@@ -1,0 +1,13 @@
+// 19_pipeline_demo.axl — Конвейеры вычислений (|>) в AxiomLang v3
+
+fn double_it(x: int) -> int {
+    return x * 2
+}
+
+fn add_five(x: int) -> int {
+    return x + 5
+}
+
+// 10 |> double_it() = 20; 20 |> add_five() = 25
+let result = 10 |> double_it() |> add_five()
+print(result)

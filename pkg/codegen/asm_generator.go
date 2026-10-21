@@ -458,6 +458,39 @@ func (g *AsmGenerator) emitExpression(buf *bytes.Buffer, expr ast.Expression) st
 		buf.WriteString(fmt.Sprintf("    call %s\n", fnName))
 		return "%rax"
 
+	case *ast.PipeExpression:
+		// Left |> Right(args...)
+		// 1. Evaluate Left expression -> %rax
+		leftReg := g.emitExpression(buf, e.Left)
+		buf.WriteString(fmt.Sprintf("    movq %s, %%rax\n", leftReg))
+		buf.WriteString("    pushq %rax\n") // save left result as first argument
+
+		// 2. Dispatch to Right call
+		if call, ok := e.Right.(*ast.CallExpression); ok {
+			fnName := call.Function.String()
+			argRegs := []string{"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"}
+			// Pop left result into first argument register %rdi
+			buf.WriteString("    popq %rdi\n")
+			// Evaluate remaining arguments into System V registers
+			for i, arg := range call.Arguments {
+				if i+1 < len(argRegs) {
+					reg := g.emitExpression(buf, arg)
+					buf.WriteString(fmt.Sprintf("    movq %s, %s\n", reg, argRegs[i+1]))
+				}
+			}
+			buf.WriteString(fmt.Sprintf("    call %s\n", fnName))
+			return "%rax"
+		} else if ident, ok := e.Right.(*ast.Identifier); ok {
+			buf.WriteString("    popq %rdi\n")
+			buf.WriteString(fmt.Sprintf("    call %s\n", ident.Value))
+			return "%rax"
+		}
+		return "%rax"
+
+	case *ast.TryExpression:
+		// expr?
+		return g.emitExpression(buf, e.Value)
+
 	default:
 		return "$0"
 	}

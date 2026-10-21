@@ -22,12 +22,14 @@ type Parser struct {
 const (
 	_ int = iota
 	LOWEST
+	PIPE_PREC   // |>
 	RANGE_PREC  // ..
 	EQUALS      // == or !=
 	LESSGREATER // > or < or <= or >=
 	SUM         // + or -
 	PRODUCT     // * or /
 	PREFIX      // -X or !X
+	POSTFIX     // expr?
 	CALL        // myFunction(X)
 	DOT         // obj.member
 )
@@ -74,6 +76,10 @@ func (p *Parser) parseInfix(tokenType lexer.TokenType, left ast.Expression) ast.
 	case lexer.PLUS, lexer.MINUS, lexer.SLASH, lexer.ASTERISK,
 		lexer.EQ, lexer.NOT_EQ, lexer.LT, lexer.LTE, lexer.GT, lexer.GTE:
 		return p.parseInfixExpression(left)
+	case lexer.PIPE:
+		return p.parsePipeExpression(left)
+	case lexer.QUESTION:
+		return p.parseTryExpression(left)
 	case lexer.RANGE:
 		return p.parseRangeExpression(left)
 	case lexer.LPAREN:
@@ -82,6 +88,25 @@ func (p *Parser) parseInfix(tokenType lexer.TokenType, left ast.Expression) ast.
 		return p.parseMemberAccessExpression(left)
 	default:
 		return nil
+	}
+}
+
+func (p *Parser) parsePipeExpression(left ast.Expression) ast.Expression {
+	tok := p.curToken
+	p.nextToken()
+	right := p.parseExpression(PIPE_PREC)
+	return &ast.PipeExpression{
+		Token: tok,
+		Left:  left,
+		Right: right,
+	}
+}
+
+func (p *Parser) parseTryExpression(left ast.Expression) ast.Expression {
+	tok := p.curToken
+	return &ast.TryExpression{
+		Token: tok,
+		Value: left,
 	}
 }
 
@@ -100,6 +125,7 @@ func (p *Parser) isInfixToken(tokenType lexer.TokenType) bool {
 	switch tokenType {
 	case lexer.PLUS, lexer.MINUS, lexer.SLASH, lexer.ASTERISK,
 		lexer.EQ, lexer.NOT_EQ, lexer.LT, lexer.LTE, lexer.GT, lexer.GTE,
+		lexer.PIPE, lexer.QUESTION,
 		lexer.RANGE,
 		lexer.LPAREN, lexer.DOT:
 		return true
@@ -119,6 +145,10 @@ func (p *Parser) Errors() []string {
 
 func (p *Parser) peekPrecedence() int {
 	switch p.peekToken.Type {
+	case lexer.PIPE:
+		return PIPE_PREC
+	case lexer.QUESTION:
+		return POSTFIX
 	case lexer.RANGE:
 		return RANGE_PREC
 	case lexer.EQ, lexer.NOT_EQ:
@@ -140,6 +170,10 @@ func (p *Parser) peekPrecedence() int {
 
 func (p *Parser) curPrecedence() int {
 	switch p.curToken.Type {
+	case lexer.PIPE:
+		return PIPE_PREC
+	case lexer.QUESTION:
+		return POSTFIX
 	case lexer.RANGE:
 		return RANGE_PREC
 	case lexer.EQ, lexer.NOT_EQ:
