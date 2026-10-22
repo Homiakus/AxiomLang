@@ -1,0 +1,10 @@
+require [Memory, IO]
+
+intent "Test 01: Verify basic string literals and newline output"
+cap memory [Scope: Arena, Max: 64KB]
+
+fn main() {
+    println("[TEST 01] Hello Pure ASM Axiom!")
+    println("[TEST 01] Line 2: Testing stream emission")
+    println("[TEST 01] PASS")
+}

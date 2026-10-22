@@ -1,0 +1,140 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Axiom",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#capabilities"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#functions"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#operators"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.axiom",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.axiom",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.axiom",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.axiom",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.axiom",
+          "match": "\\b(if|else|for|in|return|match|loop|spawn|send|receive|import|если|иначе|для|в|вернуть|сопоставить|цикл|породить|отправить|получить|импорт)\\b"
+        },
+        {
+          "name": "keyword.other.axiom",
+          "match": "\\b(let|mut|fn|struct|actor|enum|intent|cap|require|пусть|изм|функция|структура|актор|перечисление|намерение|право|требовать)\\b"
+        },
+        {
+          "name": "constant.language.boolean.axiom",
+          "match": "\\b(true|false|истина|ложь)\\b"
+        }
+      ]
+    },
+    "capabilities": {
+      "patterns": [
+        {
+          "name": "entity.name.tag.capability.axiom",
+          "match": "\\b(cap\\s+[A-Za-z0-9_]+|право\\s+[A-Za-z0-9_]+|Net|FS|Hardware|Timer|Memory|Sec|Log|AI|Display|Sound)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.axiom",
+          "match": "\\b(int|float|string|bool|void|byte|u8|u16|u32|u64|i8|i16|i32|i64|f32|f64|Map|Result|Option|целое|дробное|строка|булево)\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.axiom",
+          "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.axiom",
+          "match": "\\b[0-9]+\\.[0-9]+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.axiom",
+          "match": "\\b[0-9]+\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.pipeline.axiom",
+          "match": "\\|>"
+        },
+        {
+          "name": "keyword.operator.try.axiom",
+          "match": "\\?"
+        },
+        {
+          "name": "keyword.operator.arrow.axiom",
+          "match": "->"
+        },
+        {
+          "name": "keyword.operator.comparison.axiom",
+          "match": "(==|!=|<=|>=|<|>)"
+        },
+        {
+          "name": "keyword.operator.arithmetic.axiom",
+          "match": "(\\+|\\-|\\*|/|%)"
+        },
+        {
+          "name": "keyword.operator.assignment.axiom",
+          "match": "="
+        }
+      ]
+    }
+  }
+}

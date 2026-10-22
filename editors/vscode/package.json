@@ -1,0 +1,98 @@
+{
+  "name": "axiom-vscode",
+  "displayName": "AxiomLang & Live Flowcharts",
+  "description": "Language support for AxiomLang (.axl, .axlui) with real-time reactive control-flow diagrams and Zero-Ambient security diagnostics",
+  "version": "1.0.0",
+  "publisher": "axiom-org",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Visualization"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "axiom",
+        "aliases": [
+          "Axiom",
+          "axiom",
+          "axl"
+        ],
+        "extensions": [
+          ".axl",
+          ".axiom"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "axlui",
+        "aliases": [
+          "AxiomUI",
+          "axlui"
+        ],
+        "extensions": [
+          ".axlui",
+          ".axmlui"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "axiom",
+        "scopeName": "source.axiom",
+        "path": "./syntaxes/axiom.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "axiom.showFlowchart",
+        "title": "Axiom: Open Live Flowchart Preview",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "axiom.exportFlowchartSVG",
+        "title": "Axiom: Export Flowchart as SVG",
+        "icon": "$(file-media)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "when": "resourceExtname == .axl",
+          "command": "axiom.showFlowchart",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "Axiom Configuration",
+      "properties": {
+        "axiom.lspPath": {
+          "type": "string",
+          "default": "axiom_lsp",
+          "description": "Path to axiom_lsp binary or axlc tool"
+        },
+        "axiom.liveDiagramDelay": {
+          "type": "number",
+          "default": 300,
+          "description": "Debounce delay in milliseconds for live diagram updating while typing"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.75.0"
+  }
+}

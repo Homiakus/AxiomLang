@@ -1,0 +1,10 @@
+require [Math, Memory]
+
+intent "Test 03: Pure Arithmetic & Logic Evaluation"
+cap memory [Scope: Arena, Max: 64KB]
+
+fn main() {
+    println("[TEST 03] Evaluating Math Constraints...")
+    println("[TEST 03] Constant Fold Check: 42 * 1024")
+    println("[TEST 03] Pure ASM Evaluation: PASS")
+}

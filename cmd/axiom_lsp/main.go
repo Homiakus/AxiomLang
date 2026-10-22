@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"AxiomLang/pkg/checker"
+	"AxiomLang/pkg/flow"
 	"AxiomLang/pkg/lexer"
 	"AxiomLang/pkg/parser"
 )
@@ -151,6 +152,30 @@ func handleRequest(req *LSPRequest) {
 		}
 		sendLSPMessage(res)
 
+	case "axiom/flowchart":
+		var params struct {
+			Text string `json:"text"`
+		}
+		if err := json.Unmarshal(req.Params, &params); err == nil {
+			result := generateFlowchartsJSON(params.Text)
+			res := LSPResponse{
+				JSONRPC: "2.0",
+				ID:      req.ID,
+				Result:  result,
+			}
+			sendLSPMessage(res)
+		} else {
+			res := LSPResponse{
+				JSONRPC: "2.0",
+				ID:      req.ID,
+				Error: map[string]interface{}{
+					"code":    -32602,
+					"message": "Invalid params",
+				},
+			}
+			sendLSPMessage(res)
+		}
+
 	case "exit":
 		os.Exit(0)
 	}
@@ -190,6 +215,43 @@ func validateAxiomSource(src string) []Diagnostic {
 	}
 
 	return diagnostics
+}
+
+type FlowchartResponse struct {
+	Charts []FlowchartData `json:"charts"`
+}
+
+type FlowchartData struct {
+	Title   string            `json:"title"`
+	SVG     string            `json:"svg"`
+	Mermaid string            `json:"mermaid"`
+	Nodes   []*flow.FlowNode  `json:"nodes"`
+	Edges   []*flow.FlowEdge  `json:"edges"`
+	Width   int               `json:"width"`
+	Height  int               `json:"height"`
+}
+
+func generateFlowchartsJSON(src string) FlowchartResponse {
+	l := lexer.New(src)
+	p := parser.New(l)
+	prog := p.ParseProgram()
+
+	builder := flow.NewBuilder()
+	charts := builder.BuildProgram(prog)
+
+	var res FlowchartResponse
+	for _, c := range charts {
+		res.Charts = append(res.Charts, FlowchartData{
+			Title:   c.Title,
+			SVG:     c.ToSVG(),
+			Mermaid: c.ToMermaid(),
+			Nodes:   c.Nodes,
+			Edges:   c.Edges,
+			Width:   c.Width,
+			Height:  c.Height,
+		})
+	}
+	return res
 }
 
 func sendLSPMessage(msg LSPResponse) {

@@ -43,6 +43,7 @@ str_table_lens:    .skip 1024 * 8
 
 .section .text
 .global compile_axiom_source
+.global append_to_output
 
 compile_axiom_source:
     pushq %rbp

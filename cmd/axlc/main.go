@@ -12,6 +12,7 @@ import (
 	"AxiomLang/pkg/ai"
 	"AxiomLang/pkg/checker"
 	"AxiomLang/pkg/codegen"
+	"AxiomLang/pkg/flow"
 	"AxiomLang/pkg/lexer"
 	"AxiomLang/pkg/llvm"
 	"AxiomLang/pkg/parser"
@@ -71,6 +72,17 @@ func main() {
 		return
 	}
 
+	// Команда axlc flow <source.axl> [-o out.svg|out.bmp|out.mmd]
+	if len(args) > 0 && args[0] == "flow" {
+		if len(args) < 2 {
+			fmt.Println(" [!] Укажите исходный файл Axiom: axlc flow <source.axl> [-o out.svg]")
+			return
+		}
+		flowSourceFile := args[1]
+		generateFlowchart(flowSourceFile, *outPath)
+		return
+	}
+
 	if len(args) == 0 {
 		fmt.Println("================================================================================")
 		fmt.Println("  AxiomLang Compiler, Visual Studio & Kernel Transpiler (axlc v1.4.0)")
@@ -79,6 +91,7 @@ func main() {
 		fmt.Println("   axlc <файл.axlui / файл.axmlui>     - Нативный рендеринг GUI в видеопамять/буфер (.bmp)")
 		fmt.Println("   axlc designer [файл.axlui]          - Отрендерить проект нативным растеризатором")
 		fmt.Println("   axlc -run <source.axl>              - Скомпилировать и мгновенно запустить")
+		fmt.Println("   axlc flow <source.axl> [-o out.svg] - Автоматически построить блок-схему (SVG/BMP/Mermaid)")
 		fmt.Println("   axlc -o <binary> <source.axl>       - Скомпилировать в нативный исполняемый файл")
 		fmt.Println("   axlc -target baremetal-x86_64 -emit-llvm <source.axl> - Собрать ядро ОС (Ring 0)")
 		fmt.Println("================================================================================")
@@ -368,5 +381,81 @@ func launchVisualDesigner(filePath string, port int) {
 	} else {
 		fmt.Printf("  [✓] Нативный графический кадр отрендерен в видеопамять/буфер: %s\n", outBMP)
 		fmt.Println("  [✓] Рендеринг завершён без браузера и внешних зависимостей.")
+	}
+}
+
+func generateFlowchart(srcPath, outPath string) {
+	fmt.Println("================================================================================")
+	fmt.Println("  ⚡ AxiomLang Automated Control Flow Analyzer & Diagram Generator")
+	fmt.Println("================================================================================")
+	fmt.Printf("  📁 Анализ исходного кода: %s\n", srcPath)
+
+	data, err := os.ReadFile(srcPath)
+	if err != nil {
+		fmt.Printf("  [FATAL] Ошибка чтения файла: %v\n", err)
+		return
+	}
+
+	l := lexer.New(string(data))
+	p := parser.New(l)
+	prog := p.ParseProgram()
+	if len(p.Errors()) > 0 {
+		fmt.Println("  [!] Ошибки синтаксиса при разборе:")
+		for _, e := range p.Errors() {
+			fmt.Printf("    - %s\n", e)
+		}
+		return
+	}
+
+	builder := flow.NewBuilder()
+	charts := builder.BuildProgram(prog)
+	if len(charts) == 0 {
+		fmt.Println("  [!] В файле не обнаружено функций или исполняемых блоков.")
+		return
+	}
+
+	fmt.Printf("  [✓] Извлечено блок-схем: %d\n", len(charts))
+
+	baseName := strings.TrimSuffix(filepath.Base(srcPath), filepath.Ext(srcPath))
+
+	for i, chart := range charts {
+		ext := strings.ToLower(filepath.Ext(outPath))
+		targetOut := outPath
+
+		if targetOut == "" {
+			if len(charts) == 1 {
+				targetOut = fmt.Sprintf("%s_flow.svg", baseName)
+			} else {
+				targetOut = fmt.Sprintf("%s_flow_%d.svg", baseName, i+1)
+			}
+			ext = ".svg"
+		}
+
+		switch ext {
+		case ".bmp":
+			canvas := chart.RenderToCanvas()
+			if err := canvas.SaveAsBMP(targetOut); err != nil {
+				fmt.Printf("  [!] Ошибка сохранения BMP: %v\n", err)
+			} else {
+				fmt.Printf("  [✓] Нативная блок-схема сохранена в BMP (%dx%d): %s\n", canvas.Width, canvas.Height, targetOut)
+			}
+		case ".mmd", ".mermaid":
+			mmdContent := chart.ToMermaid()
+			if err := os.WriteFile(targetOut, []byte(mmdContent), 0644); err != nil {
+				fmt.Printf("  [!] Ошибка сохранения Mermaid: %v\n", err)
+			} else {
+				fmt.Printf("  [✓] Mermaid-диаграмма сохранена: %s\n", targetOut)
+			}
+		default: // .svg
+			svgContent := chart.ToSVG()
+			if err := os.WriteFile(targetOut, []byte(svgContent), 0644); err != nil {
+				fmt.Printf("  [!] Ошибка сохранения SVG: %v\n", err)
+			} else {
+				fmt.Printf("  [✓] Векторная SVG блок-схема сохранена: %s\n", targetOut)
+			}
+		}
+
+		fmt.Println("--------------------------------------------------------------------------------")
+		fmt.Printf("  Диаграмма [%s]: %d узлов, %d переходов/стрелок\n", chart.Title, len(chart.Nodes), len(chart.Edges))
 	}
 }

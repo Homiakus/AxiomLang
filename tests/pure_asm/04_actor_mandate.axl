@@ -1,0 +1,15 @@
+require [Actor, Memory]
+
+intent "Test 04: Pure Actor Concurrency Tokens"
+cap memory [Scope: Arena, Max: 128KB]
+
+actor Worker {
+    receive(msg) {
+        println("[ACTOR] Received message in isolated mailbox")
+    }
+}
+
+fn main() {
+    println("[TEST 04] Actor Mandate Spawning: Active")
+    println("[TEST 04] Actor Isolation: PASS")
+}

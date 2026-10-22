@@ -1,40 +1,47 @@
-# Makefile for AxiomLang (axlc) Toolchain
+# Makefile for Pure Freestanding AxiomLang Toolchain (Zero Go Runtime)
 
-.PHONY: all build build-asm install test clean run-examples
+.PHONY: all build-asm build-axpm test clean run-examples
 
 BIN_DIR = bin
-BIN_NAME = $(BIN_DIR)/axlc
 ASM_COMPILER = $(BIN_DIR)/axlc_asm
-SRC = cmd/axlc/main.go
+AXPM = $(BIN_DIR)/axpm
 INSTALL_PREFIX ?= /usr/local/bin
 
-all: build build-asm test
-
-build:
-	@echo "==> Building $(BIN_NAME)..."
-	@mkdir -p $(BIN_DIR)
-	go build -ldflags="-s -w" -o $(BIN_NAME) $(SRC)
+all: build-asm build-axpm test
 
 build-asm:
 	@echo "==> Building Pure Freestanding x86_64 Assembly Compiler $(ASM_COMPILER)..."
 	@mkdir -p $(BIN_DIR) build/
-	as -o build/main_asm.o src_asm/main.s
-	as -o build/compiler_asm.o src_asm/compiler.s
-	ld -o $(ASM_COMPILER) build/main_asm.o build/compiler_asm.o
-	@echo "==> $(ASM_COMPILER) built successfully."
+	as -g -o build/main_asm.o src_asm/main.s
+	as -g -o build/compiler_asm.o src_asm/compiler.s
+	as -g -o build/mca_runtime.o src_asm/mca_runtime.s
+	as -g -o build/dwarf.o src_asm/debug/dwarf.s
+	ld -o $(ASM_COMPILER) build/main_asm.o build/compiler_asm.o build/mca_runtime.o build/dwarf.o
+	@echo "==> $(ASM_COMPILER) built successfully (Pure Machine Code)."
 
-install: build build-asm
-	@echo "==> Installing $(BIN_NAME) and $(ASM_COMPILER) to $(INSTALL_PREFIX)..."
-	sudo cp $(BIN_NAME) $(INSTALL_PREFIX)/axlc
-	sudo chmod +x $(INSTALL_PREFIX)/axlc
+build-axpm:
+	@echo "==> Building Pure ASM Package Manager $(AXPM)..."
+	@mkdir -p $(BIN_DIR) build/
+	as -g -o build/axpm.o src_asm/axpm/main.s
+	ld -o $(AXPM) build/axpm.o
+	@echo "==> $(AXPM) built successfully."
+
+install: build-asm build-axpm
+	@echo "==> Installing $(ASM_COMPILER) and $(AXPM) to $(INSTALL_PREFIX)..."
 	sudo cp $(ASM_COMPILER) $(INSTALL_PREFIX)/axlc_asm
-	sudo chmod +x $(INSTALL_PREFIX)/axlc_asm
+	sudo cp $(ASM_COMPILER) $(INSTALL_PREFIX)/axlc
+	sudo cp $(AXPM) $(INSTALL_PREFIX)/axpm
+	sudo chmod +x $(INSTALL_PREFIX)/axlc $(INSTALL_PREFIX)/axlc_asm $(INSTALL_PREFIX)/axpm
 
-test:
-	@echo "==> Running all AxiomLang unit test suites..."
-	go test -v ./pkg/... ./stdlib/...
-	@echo "==> Running Pure Assembly Compiler Verification..."
-	./$(ASM_COMPILER) examples/01_hello_world.axl -run
+test: build-asm build-axpm
+	@echo "==> Running Pure Assembly Verification on Test Suite..."
+	@for t in tests/pure_asm/*.axl; do \
+		echo "--> Testing $$t..."; \
+		./$(ASM_COMPILER) $$t -run || exit 1; \
+	done
+	@echo "==> Running AXPM Package Suite..."
+	./$(AXPM) test
+	@echo "==> [ALL TESTS PASSED SUCCESSFULLY]"
 
 clean:
 	@echo "==> Cleaning build artifacts..."

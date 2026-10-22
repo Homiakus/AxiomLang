@@ -530,5 +530,19 @@ func (te *TryExpression) String() string {
 	return fmt.Sprintf("%s?", te.Value.String())
 }
 
+// IndexExpression represents expr[index]
+type IndexExpression struct {
+	Token lexer.Token // '['
+	Left  Expression
+	Index Expression
+}
+
+func (ie *IndexExpression) expressionNode()      {}
+func (ie *IndexExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *IndexExpression) String() string {
+	return fmt.Sprintf("%s[%s]", ie.Left.String(), ie.Index.String())
+}
+
+
 
 

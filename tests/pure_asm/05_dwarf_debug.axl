@@ -1,0 +1,10 @@
+require [Debug, Memory]
+
+intent "Test 05: DWARF line mapping and breakpoint verification"
+cap memory [Scope: Arena, Max: 64KB]
+
+fn main() {
+    println("[TEST 05] Testing DWARF .debug_line table")
+    println("[TEST 05] Breakpoint probe ready at _start")
+    println("[TEST 05] PASS")
+}

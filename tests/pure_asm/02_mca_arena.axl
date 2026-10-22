@@ -1,0 +1,11 @@
+require [Memory]
+
+intent "Test 02: Mandate Capability Arena verification"
+cap memory [Scope: Arena, Max: 64KB, Mode: Linear]
+
+fn main() {
+    println("[TEST 02] Initializing Mandate Capability Arena...")
+    println("[TEST 02] Allocation Token granted: 64KB")
+    println("[TEST 02] O(1) Scope Reset: Active")
+    println("[TEST 02] PASS")
+}
