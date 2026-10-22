@@ -1,13 +1,14 @@
-# Makefile for Pure Freestanding AxiomLang Toolchain (Zero Go Runtime)
+# Makefile for 100% Pure Freestanding AxiomLang Toolchain (Zero Go Runtime)
 
-.PHONY: all build-asm build-axpm test clean run-examples
+.PHONY: all build-asm build-axpm build-lsp test clean
 
 BIN_DIR = bin
 ASM_COMPILER = $(BIN_DIR)/axlc_asm
 AXPM = $(BIN_DIR)/axpm
+LSP_SERVER = $(BIN_DIR)/axiom_lsp
 INSTALL_PREFIX ?= /usr/local/bin
 
-all: build-asm build-axpm test
+all: build-asm build-axpm build-lsp test
 
 build-asm:
 	@echo "==> Building Pure Freestanding x86_64 Assembly Compiler $(ASM_COMPILER)..."
@@ -16,8 +17,13 @@ build-asm:
 	as -g -o build/compiler_asm.o src_asm/compiler.s
 	as -g -o build/mca_runtime.o src_asm/mca_runtime.s
 	as -g -o build/dwarf.o src_asm/debug/dwarf.s
-	ld -o $(ASM_COMPILER) build/main_asm.o build/compiler_asm.o build/mca_runtime.o build/dwarf.o
-	@echo "==> $(ASM_COMPILER) built successfully (Pure Machine Code)."
+	as -g -o build/lexer_core.o src_asm/core/lexer.s
+	as -g -o build/parser_ast.o src_asm/parser/ast.s
+	as -g -o build/checker_asm.o src_asm/checker/checker.s
+	as -g -o build/stdlib_actor_io.o src_asm/stdlib/actor_io.s
+	ld -o $(ASM_COMPILER) build/main_asm.o build/compiler_asm.o build/mca_runtime.o build/dwarf.o build/lexer_core.o build/parser_ast.o build/checker_asm.o build/stdlib_actor_io.o
+	@cp -f $(ASM_COMPILER) $(BIN_DIR)/axlc
+	@echo "==> $(ASM_COMPILER) and $(BIN_DIR)/axlc built successfully (Pure Machine Code)."
 
 build-axpm:
 	@echo "==> Building Pure ASM Package Manager $(AXPM)..."
@@ -26,14 +32,22 @@ build-axpm:
 	ld -o $(AXPM) build/axpm.o
 	@echo "==> $(AXPM) built successfully."
 
-install: build-asm build-axpm
-	@echo "==> Installing $(ASM_COMPILER) and $(AXPM) to $(INSTALL_PREFIX)..."
+build-lsp:
+	@echo "==> Building Pure ASM LSP Server $(LSP_SERVER)..."
+	@mkdir -p $(BIN_DIR) build/
+	as -g -o build/axiom_lsp_asm.o src_asm/lsp/main.s
+	ld -o $(LSP_SERVER) build/axiom_lsp_asm.o
+	@echo "==> $(LSP_SERVER) built successfully."
+
+install: build-asm build-axpm build-lsp
+	@echo "==> Installing binaries to $(INSTALL_PREFIX)..."
 	sudo cp $(ASM_COMPILER) $(INSTALL_PREFIX)/axlc_asm
 	sudo cp $(ASM_COMPILER) $(INSTALL_PREFIX)/axlc
 	sudo cp $(AXPM) $(INSTALL_PREFIX)/axpm
-	sudo chmod +x $(INSTALL_PREFIX)/axlc $(INSTALL_PREFIX)/axlc_asm $(INSTALL_PREFIX)/axpm
+	sudo cp $(LSP_SERVER) $(INSTALL_PREFIX)/axiom_lsp
+	sudo chmod +x $(INSTALL_PREFIX)/axlc $(INSTALL_PREFIX)/axlc_asm $(INSTALL_PREFIX)/axpm $(INSTALL_PREFIX)/axiom_lsp
 
-test: build-asm build-axpm
+test: build-asm build-axpm build-lsp
 	@echo "==> Running Pure Assembly Verification on Test Suite..."
 	@for t in tests/pure_asm/*.axl; do \
 		echo "--> Testing $$t..."; \
@@ -41,7 +55,7 @@ test: build-asm build-axpm
 	done
 	@echo "==> Running AXPM Package Suite..."
 	./$(AXPM) test
-	@echo "==> [ALL TESTS PASSED SUCCESSFULLY]"
+	@echo "==> [ALL PURE ASM TESTS PASSED SUCCESSFULLY]"
 
 clean:
 	@echo "==> Cleaning build artifacts..."
