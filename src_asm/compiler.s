@@ -1355,6 +1355,132 @@ code_runtime:
     .ascii "    addq 8(%rsp), %rax\n"
     .ascii "    addq $16, %rsp\n"
     .ascii "    ret\n\n"
+    .ascii ".global axiom_f64_from_int\n"
+    .ascii "axiom_f64_from_int:\n"
+    .ascii "    cvtsi2sdq %rdi, %xmm0\n"
+    .ascii "    movq %xmm0, %rax\n"
+    .ascii "    ret\n\n"
+    .ascii ".global axiom_f64_to_int\n"
+    .ascii "axiom_f64_to_int:\n"
+    .ascii "    movq %rdi, %xmm0\n"
+    .ascii "    cvttsd2siq %xmm0, %rax\n"
+    .ascii "    ret\n\n"
+    .ascii ".global axiom_f64_add\n"
+    .ascii "axiom_f64_add:\n"
+    .ascii "    movq %rdi, %xmm0\n"
+    .ascii "    movq %rsi, %xmm1\n"
+    .ascii "    addsd %xmm1, %xmm0\n"
+    .ascii "    movq %xmm0, %rax\n"
+    .ascii "    ret\n\n"
+    .ascii ".global axiom_f64_sub\n"
+    .ascii "axiom_f64_sub:\n"
+    .ascii "    movq %rdi, %xmm0\n"
+    .ascii "    movq %rsi, %xmm1\n"
+    .ascii "    subsd %xmm1, %xmm0\n"
+    .ascii "    movq %xmm0, %rax\n"
+    .ascii "    ret\n\n"
+    .ascii ".global axiom_f64_mul\n"
+    .ascii "axiom_f64_mul:\n"
+    .ascii "    movq %rdi, %xmm0\n"
+    .ascii "    movq %rsi, %xmm1\n"
+    .ascii "    mulsd %xmm1, %xmm0\n"
+    .ascii "    movq %xmm0, %rax\n"
+    .ascii "    ret\n\n"
+    .ascii ".global axiom_f64_div\n"
+    .ascii "axiom_f64_div:\n"
+    .ascii "    movq %rdi, %xmm0\n"
+    .ascii "    movq %rsi, %xmm1\n"
+    .ascii "    divsd %xmm1, %xmm0\n"
+    .ascii "    movq %xmm0, %rax\n"
+    .ascii "    ret\n\n"
+    .ascii ".global axiom_f64_sqrt\n"
+    .ascii "axiom_f64_sqrt:\n"
+    .ascii "    movq %rdi, %xmm0\n"
+    .ascii "    sqrtsd %xmm0, %xmm0\n"
+    .ascii "    movq %xmm0, %rax\n"
+    .ascii "    ret\n\n"
+    .ascii ".global axiom_f64_lt\n"
+    .ascii "axiom_f64_lt:\n"
+    .ascii "    movq %rdi, %xmm0\n"
+    .ascii "    movq %rsi, %xmm1\n"
+    .ascii "    xorq %rax, %rax\n"
+    .ascii "    ucomisd %xmm1, %xmm0\n"
+    .ascii "    setb %al\n"
+    .ascii "    ret\n\n"
+    .ascii ".global axiom_f64_to_str\n"
+    .ascii "axiom_f64_to_str:\n"
+    .ascii "    pushq %r12\n"
+    .ascii "    pushq %r13\n"
+    .ascii "    pushq %r14\n"
+    .ascii "    pushq %r15\n"
+    .ascii "    movq %rdi, %r12\n"
+    .ascii "    xorq %r13, %r13\n"
+    .ascii "    btq $63, %r12\n"
+    .ascii "    jnc .L_f2s_pos\n"
+    .ascii "    movq $1, %r13\n"
+    .ascii "    btrq $63, %r12\n"
+    .ascii ".L_f2s_pos:\n"
+    .ascii "    movq %r12, %xmm0\n"
+    .ascii "    cvttsd2siq %xmm0, %r14\n"
+    .ascii "    cvtsi2sdq %r14, %xmm1\n"
+    .ascii "    subsd %xmm1, %xmm0\n"
+    .ascii "    movq $1000000, %rax\n"
+    .ascii "    cvtsi2sdq %rax, %xmm1\n"
+    .ascii "    mulsd %xmm1, %xmm0\n"
+    .ascii "    cvttsd2siq %xmm0, %r15\n"
+    .ascii "    cmpq $0, %r15\n"
+    .ascii "    jge .L_f2s_fok\n"
+    .ascii "    xorq %r15, %r15\n"
+    .ascii ".L_f2s_fok:\n"
+    .ascii "    movq %r14, %rdi\n"
+    .ascii "    call axiom_int_to_str\n"
+    .ascii "    movq %rax, %r12\n"
+    .ascii "    movq (%r12), %rcx\n"
+    .ascii "    leaq 24(%rcx, %r13), %rdi\n"
+    .ascii "    call axiom_rt_alloc\n"
+    .ascii "    movq (%r12), %rcx\n"
+    .ascii "    leaq 7(%rcx, %r13), %rdx\n"
+    .ascii "    movq %rdx, (%rax)\n"
+    .ascii "    leaq 16(%rax), %rdi\n"
+    .ascii "    movq %rdi, 8(%rax)\n"
+    .ascii "    pushq %rax\n"
+    .ascii "    testq %r13, %r13\n"
+    .ascii "    jz .L_f2s_cp\n"
+    .ascii "    movb $45, (%rdi)\n"
+    .ascii "    incq %rdi\n"
+    .ascii ".L_f2s_cp:\n"
+    .ascii "    movq 8(%r12), %rsi\n"
+    .ascii "    cld\n"
+    .ascii "    rep movsb\n"
+    .ascii "    movb $46, (%rdi)\n"
+    .ascii "    incq %rdi\n"
+    .ascii "    addq $6, %rdi\n"
+    .ascii "    movb $0, (%rdi)\n"
+    .ascii "    movq %r15, %rax\n"
+    .ascii "    movq $10, %r8\n"
+    .ascii "    movq $6, %rcx\n"
+    .ascii ".L_f2s_floop:\n"
+    .ascii "    decq %rdi\n"
+    .ascii "    xorq %rdx, %rdx\n"
+    .ascii "    divq %r8\n"
+    .ascii "    addb $48, %dl\n"
+    .ascii "    movb %dl, (%rdi)\n"
+    .ascii "    decq %rcx\n"
+    .ascii "    jnz .L_f2s_floop\n"
+    .ascii "    popq %rax\n"
+    .ascii "    popq %r15\n"
+    .ascii "    popq %r14\n"
+    .ascii "    popq %r13\n"
+    .ascii "    popq %r12\n"
+    .ascii "    ret\n\n"
+    .ascii ".global axiom_sys_call\n"
+    .ascii "axiom_sys_call:\n"
+    .ascii "    movq %rdi, %rax\n"
+    .ascii "    movq %rsi, %rdi\n"
+    .ascii "    movq %rdx, %rsi\n"
+    .ascii "    movq %rcx, %rdx\n"
+    .ascii "    syscall\n"
+    .ascii "    ret\n\n"
     .ascii ".section .rodata\n"
     .ascii "axiom_msg_oom: .ascii \" [MCA-FATAL] Out of arena memory or out-of-bounds access\\n\"\n"
     .ascii ".section .data\n"
@@ -1421,6 +1547,16 @@ kw_fdwrite_str: .ascii "fd_write"
 kw_fdclose_str: .ascii "fd_close"
 kw_sleepms_str: .ascii "sleep_ms"
 kw_timens_str:  .ascii "time_ns"
+kw_f64fi_str:   .ascii "f64_from_int"
+kw_f64ti_str:   .ascii "f64_to_int"
+kw_f64add_str:  .ascii "f64_add"
+kw_f64sub_str:  .ascii "f64_sub"
+kw_f64mul_str:  .ascii "f64_mul"
+kw_f64div_str:  .ascii "f64_div"
+kw_f64sqrt_str: .ascii "f64_sqrt"
+kw_f64lt_str:   .ascii "f64_lt"
+kw_f64ts_str:   .ascii "f64_to_str"
+kw_syscall_str: .ascii "sys_call"
 rt_rtsave_str:  .ascii "rt_save"
 rt_rtrest_str:  .ascii "rt_restore"
 insn_call_ax_pre: .ascii "    call axiom_"
@@ -1448,6 +1584,16 @@ beta_builtin_table:
     .quad kw_fdclose_str,  8, 1, kw_fdclose_str, 8
     .quad kw_sleepms_str,  8, 1, kw_sleepms_str, 8
     .quad kw_timens_str,   7, 0, kw_timens_str,  7
+    .quad kw_f64fi_str,   12, 1, kw_f64fi_str,  12
+    .quad kw_f64ti_str,   10, 1, kw_f64ti_str,  10
+    .quad kw_f64add_str,   7, 2, kw_f64add_str,  7
+    .quad kw_f64sub_str,   7, 2, kw_f64sub_str,  7
+    .quad kw_f64mul_str,   7, 2, kw_f64mul_str,  7
+    .quad kw_f64div_str,   7, 2, kw_f64div_str,  7
+    .quad kw_f64sqrt_str,  8, 1, kw_f64sqrt_str, 8
+    .quad kw_f64lt_str,    6, 2, kw_f64lt_str,   6
+    .quad kw_f64ts_str,   10, 1, kw_f64ts_str,  10
+    .quad kw_syscall_str,  8, 4, kw_syscall_str, 8
     .quad 0, 0, 0, 0, 0
 insn_call_fyield: .ascii "    call axiom_fiber_yield\n"
 insn_call_fyield_len = . - insn_call_fyield
@@ -1533,25 +1679,25 @@ var_count:         .quad 0
 label_seq:         .quad 0
 has_main_fn:       .quad 0
 
-str_table_ptrs:    .skip 1024 * 8
-str_table_lens:    .skip 1024 * 8
+str_table_ptrs:    .skip 4096 * 8
+str_table_lens:    .skip 4096 * 8
 
-# Local variable symbol table (up to 128 locals in 1024-byte frame)
-var_ptrs:          .skip 128 * 8
-var_lens:          .skip 128 * 8
-var_offsets:       .skip 128 * 8
-var_is_str:        .skip 128 * 8
-var_reg:           .skip 128 * 8
+# Local variable symbol table (up to 1024 locals in 8192-byte frame)
+var_ptrs:          .skip 1024 * 8
+var_lens:          .skip 1024 * 8
+var_offsets:       .skip 1024 * 8
+var_is_str:        .skip 1024 * 8
+var_reg:           .skip 1024 * 8
 in_fn_regalloc:    .quad 0
 reg_alloc_cnt:     .quad 0
 fn_needs_frame:    .quad 0
 fn_is_leaf:        .quad 0
 tail_call_active:  .quad 0
 
-struct_fld_ptrs:   .skip 512 * 8
-struct_fld_lens:   .skip 512 * 8
-struct_fld_offs:   .skip 512 * 8
-struct_fld_types:  .skip 512 * 8
+struct_fld_ptrs:   .skip 2048 * 8
+struct_fld_lens:   .skip 2048 * 8
+struct_fld_offs:   .skip 2048 * 8
+struct_fld_types:  .skip 2048 * 8
 struct_fld_cnt:    .quad 0
 
 .section .text
@@ -2294,7 +2440,7 @@ codegen_stmt:
 
 .L_cs_print_str:
     movq str_count(%rip), %rax
-    cmpq $1024, %rax
+    cmpq $4096, %rax
     jge .L_cs_done
     movq AST_OFF_NAME_PTR(%rdi), %rcx
     leaq str_table_ptrs(%rip), %rdx
@@ -3611,7 +3757,7 @@ codegen_expr:
 
 .L_ce_str:
     movq str_count(%rip), %rax
-    cmpq $1024, %rax
+    cmpq $4096, %rax
     jge .L_ce_zero
     movq AST_OFF_NAME_PTR(%r12), %rcx
     leaq str_table_ptrs(%rip), %rdx
@@ -4184,7 +4330,7 @@ var_get_or_alloc:
     jnz .L_vga_ret
 
     movq var_count(%rip), %rcx
-    cmpq $128, %rcx
+    cmpq $1024, %rcx
     jge .L_vga_full
 
     leaq var_ptrs(%rip), %rdx
@@ -4973,6 +5119,13 @@ expr_is_str:
     jnz .L_eisc_yes
     movq AST_OFF_NAME_PTR(%r12), %rdi
     movq AST_OFF_NAME_LEN(%r12), %rsi
+    leaq kw_f64ts_str(%rip), %rdx
+    movq $10, %rcx
+    call slice_eq
+    testq %rax, %rax
+    jnz .L_eisc_yes
+    movq AST_OFF_NAME_PTR(%r12), %rdi
+    movq AST_OFF_NAME_LEN(%r12), %rsi
     call chk_get_fn_ret_type
     cmpq $2, %rax
     je .L_eisc_yes
@@ -5215,7 +5368,7 @@ insn_pop_pre:         .ascii "    popq "
 insn_pop_pre_len = . - insn_pop_pre
 insn_pro_frame:       .ascii "    pushq %rbp\n    movq %rsp, %rbp\n"
 insn_pro_frame_len = . - insn_pro_frame
-insn_sub_1024:        .ascii "    subq $1024, %rsp\n"
+insn_sub_1024:        .ascii "    subq $8192, %rsp\n"
 insn_sub_1024_len = . - insn_sub_1024
 insn_leaq_neg:        .ascii "    leaq -"
 insn_leaq_neg_len = . - insn_leaq_neg

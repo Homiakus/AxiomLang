@@ -25,15 +25,17 @@ lsp_rpc_mid:  .ascii ",\"result\":"
 lsp_rpc_end:  .ascii "}"
 pat_id_key:   .ascii "\"id\":"
 
-lsp_diag_ok_pkt:
-    .ascii "Content-Length: 113\r\n\r\n"
-    .ascii "{\"jsonrpc\":\"2.0\",\"method\":\"textDocument/publishDiagnostics\",\"params\":{\"uri\":\"file:///main.axl\",\"diagnostics\":[]}}"
-lsp_diag_ok_pkt_len = . - lsp_diag_ok_pkt
-
-lsp_diag_err_pkt:
-    .ascii "Content-Length: 237\r\n\r\n"
-    .ascii "{\"jsonrpc\":\"2.0\",\"method\":\"textDocument/publishDiagnostics\",\"params\":{\"uri\":\"file:///main.axl\",\"diagnostics\":[{\"range\":{\"start\":{\"line\":0,\"character\":0},\"end\":{\"line\":0,\"character\":1}},\"severity\":1,\"message\":\"Static division by zero\"}]}}"
-lsp_diag_err_pkt_len = . - lsp_diag_err_pkt
+lsp_diag_ok_pre:
+    .ascii "{\"jsonrpc\":\"2.0\",\"method\":\"textDocument/publishDiagnostics\",\"params\":{\"uri\":\""
+lsp_diag_ok_pre_len = . - lsp_diag_ok_pre
+lsp_diag_ok_suf:
+    .ascii "\",\"diagnostics\":[]}}"
+lsp_diag_ok_suf_len = . - lsp_diag_ok_suf
+lsp_diag_err_suf:
+    .ascii "\",\"diagnostics\":[{\"range\":{\"start\":{\"line\":0,\"character\":0},\"end\":{\"line\":0,\"character\":1}},\"severity\":1,\"message\":\"Static division by zero\"}]}}"
+lsp_diag_err_suf_len = . - lsp_diag_err_suf
+lsp_uri_def: .ascii "file:///main.axl"
+lsp_uri_def_len = . - lsp_uri_def
 
 pat_initialize: .ascii "\"initialize\""
 pat_initialize_len = . - pat_initialize
@@ -159,21 +161,72 @@ lsp_read_loop:
     jmp lsp_read_loop
 
 .L_send_diag:
+    call extract_json_uri    # -> %r12 = uri_ptr, %r13 = uri_len
+    leaq lsp_body_buf(%rip), %rdi
+    leaq lsp_diag_ok_pre(%rip), %rsi
+    movq $lsp_diag_ok_pre_len, %rcx
+    movq %rcx, %r14
+    cld
+    rep movsb
+    movq %r12, %rsi
+    movq %r13, %rcx
+    addq %rcx, %r14
+    rep movsb
+
+    pushq %rdi
     leaq pat_div0(%rip), %rdi
     movq $pat_div0_len, %rsi
     call buf_contains
+    popq %rdi
     testq %rax, %rax
-    jnz .L_send_diag_err
-    leaq lsp_diag_ok_pkt(%rip), %rsi
-    movq $lsp_diag_ok_pkt_len, %rdx
-    jmp .L_write_pkt
-.L_send_diag_err:
-    leaq lsp_diag_err_pkt(%rip), %rsi
-    movq $lsp_diag_err_pkt_len, %rdx
+    jnz .L_sd_err
+    leaq lsp_diag_ok_suf(%rip), %rsi
+    movq $lsp_diag_ok_suf_len, %rcx
+    jmp .L_sd_emit
+.L_sd_err:
+    leaq lsp_diag_err_suf(%rip), %rsi
+    movq $lsp_diag_err_suf_len, %rcx
+.L_sd_emit:
+    addq %rcx, %r14
+    cld
+    rep movsb
 
-.L_write_pkt:
+    # Frame lsp_body_buf (len=%r14) into lsp_out_buf with Content-Length
+    leaq lsp_out_buf(%rip), %rdi
+    xorq %r15, %r15
+    leaq lsp_hdr_cl(%rip), %rsi
+    movq $16, %rcx
+    addq %rcx, %r15
+    rep movsb
+    subq $32, %rsp
+    leaq 31(%rsp), %rsi
+    movq %r14, %rax
+    xorq %rcx, %rcx
+.L_sd_div:
+    xorq %rdx, %rdx
+    movq $10, %rbx
+    divq %rbx
+    addb $'0', %dl
+    decq %rsi
+    movb %dl, (%rsi)
+    incq %rcx
+    testq %rax, %rax
+    jnz .L_sd_div
+    addq %rcx, %r15
+    rep movsb
+    addq $32, %rsp
+    leaq lsp_hdr_crlf(%rip), %rsi
+    movq $4, %rcx
+    addq %rcx, %r15
+    rep movsb
+    leaq lsp_body_buf(%rip), %rsi
+    movq %r14, %rcx
+    addq %rcx, %r15
+    rep movsb
     movq $SYS_WRITE, %rax
     movq $STDOUT_FILENO, %rdi
+    leaq lsp_out_buf(%rip), %rsi
+    movq %r15, %rdx
     syscall
     jmp lsp_read_loop
 
@@ -375,4 +428,57 @@ extract_json_id:
 .L_eji_def:
     movb $'1', lsp_id_buf(%rip)
     movq $1, lsp_id_len(%rip)
+    ret
+
+extract_json_uri:
+    leaq lsp_in_buf(%rip), %rsi
+    movq lsp_in_len(%rip), %rcx
+    xorq %r8, %r8
+    cmpq $7, %rcx
+    jl .L_eju_def
+    subq $7, %rcx
+.L_eju_scan:
+    cmpq %rcx, %r8
+    jg .L_eju_def
+    cmpb $'"', (%rsi, %r8)
+    jne .L_eju_next
+    cmpb $'u', 1(%rsi, %r8)
+    jne .L_eju_next
+    cmpb $'r', 2(%rsi, %r8)
+    jne .L_eju_next
+    cmpb $'i', 3(%rsi, %r8)
+    jne .L_eju_next
+    cmpb $'"', 4(%rsi, %r8)
+    jne .L_eju_next
+    cmpb $':', 5(%rsi, %r8)
+    jne .L_eju_next
+    addq $6, %r8
+    addq $7, %rcx
+.L_eju_find_q:
+    cmpq %rcx, %r8
+    jge .L_eju_def
+    cmpb $'"', (%rsi, %r8)
+    je .L_eju_start
+    incq %r8
+    jmp .L_eju_find_q
+.L_eju_start:
+    incq %r8
+    leaq (%rsi, %r8), %r12
+    xorq %r13, %r13
+.L_eju_end:
+    cmpq %rcx, %r8
+    jge .L_eju_def
+    cmpb $'"', (%rsi, %r8)
+    je .L_eju_ok
+    incq %r8
+    incq %r13
+    jmp .L_eju_end
+.L_eju_next:
+    incq %r8
+    jmp .L_eju_scan
+.L_eju_ok:
+    ret
+.L_eju_def:
+    leaq lsp_uri_def(%rip), %r12
+    movq $lsp_uri_def_len, %r13
     ret

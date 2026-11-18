@@ -46,6 +46,16 @@ chk_kw_fdwrite: .ascii "fd_write"
 chk_kw_fdclose: .ascii "fd_close"
 chk_kw_sleepms: .ascii "sleep_ms"
 chk_kw_timens:  .ascii "time_ns"
+chk_kw_f64fi:   .ascii "f64_from_int"
+chk_kw_f64ti:   .ascii "f64_to_int"
+chk_kw_f64add:  .ascii "f64_add"
+chk_kw_f64sub:  .ascii "f64_sub"
+chk_kw_f64mul:  .ascii "f64_mul"
+chk_kw_f64div:  .ascii "f64_div"
+chk_kw_f64sqrt: .ascii "f64_sqrt"
+chk_kw_f64lt:   .ascii "f64_lt"
+chk_kw_f64ts:   .ascii "f64_to_str"
+chk_kw_syscall: .ascii "sys_call"
 .align 8
 chk_beta_table:
     .quad chk_kw_int2str, 10, chk_kw_fdread, 7, chk_kw_rerrmsg, 11
@@ -54,6 +64,9 @@ chk_beta_table:
     .quad chk_kw_rok, 6, chk_kw_rerr, 7, chk_kw_risok, 9, chk_kw_runwrap, 10
     .quad chk_kw_tcplis, 10, chk_kw_tcpacc, 10, chk_kw_tcpconn, 17
     .quad chk_kw_fdwrite, 8, chk_kw_fdclose, 8, chk_kw_sleepms, 8, chk_kw_timens, 7
+    .quad chk_kw_f64fi, 12, chk_kw_f64ti, 10, chk_kw_f64add, 7, chk_kw_f64sub, 7
+    .quad chk_kw_f64mul, 7, chk_kw_f64div, 7, chk_kw_f64sqrt, 8, chk_kw_f64lt, 6
+    .quad chk_kw_f64ts, 10, chk_kw_syscall, 8
     .quad 0, 0
 chk_kw_tspawn:  .ascii "thread_spawn"
 chk_kw_tjoin:   .ascii "thread_join"
@@ -812,6 +825,14 @@ checker_infer_type:
     movq AST_OFF_NAME_LEN(%r12), %rsi
     leaq chk_kw_rerrmsg(%rip), %rdx
     movq $11, %rcx
+    call chk_slice_eq
+    testq %rax, %rax
+    jnz .L_cit_call_str
+
+    movq AST_OFF_NAME_PTR(%r12), %rdi
+    movq AST_OFF_NAME_LEN(%r12), %rsi
+    leaq chk_kw_f64ts(%rip), %rdx
+    movq $10, %rcx
     call chk_slice_eq
     testq %rax, %rax
     jnz .L_cit_call_str

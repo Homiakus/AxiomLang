@@ -1,0 +1,23 @@
+require [Memory, IO]
+
+fn main() {
+    // 1. Hardware SSE2 IEEE-754 f64 arithmetic & sqrt
+    let two = f64_from_int(2)
+    let s2 = f64_sqrt(two)
+    println(f64_to_str(s2))
+
+    let a = f64_from_int(355)
+    let b = f64_from_int(113)
+    let pi = f64_div(a, b)
+    println(f64_to_str(pi))
+
+    let sum = f64_add(s2, pi)
+    println(f64_to_int(sum))
+    println(f64_lt(s2, pi))
+
+    // 2. Direct Linux syscall via sys_call(SYS_GETPID=39, 0, 0, 0)
+    let pid = sys_call(39, 0, 0, 0)
+    if pid > 0 {
+        println("SYSCALL_OK")
+    }
+}

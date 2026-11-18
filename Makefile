@@ -128,7 +128,9 @@ test: build-asm build-axpm build-lsp
 	@test "$$(/tmp/axl_int10)" = "$$(printf '100\n200\n101\n201\n100000\n84')" || (echo "Integration 10 failed"; exit 1)
 	@./$(ASM_COMPILER) tests/integration/11_industrial_beta_stdlib.axl -o /tmp/axl_int11 > /dev/null
 	@test "$$(/tmp/axl_int11)" = "$$(printf 'ARENA_OK\n0,-42,12345\n350\n0\n42\ndivision by zero\nECHO:PING_BETA\nTIME_OK')" || (echo "Integration 11 failed"; exit 1)
-	@rm -f /tmp/axl_int1 /tmp/axl_int2 /tmp/axl_int3 /tmp/axl_int4 /tmp/axl_int5 /tmp/axl_int6 /tmp/axl_int7 /tmp/axl_int8 /tmp/axl_int9 /tmp/axl_int10 /tmp/axl_int11 /tmp/axl_io_test.txt
+	@./$(ASM_COMPILER) tests/integration/12_v1_f64_and_syscall.axl -o /tmp/axl_int12 > /dev/null
+	@test "$$(/tmp/axl_int12)" = "$$(printf '1.414213\n3.141592\n4\n1\nSYSCALL_OK')" || (echo "Integration 12 failed"; exit 1)
+	@rm -f /tmp/axl_int1 /tmp/axl_int2 /tmp/axl_int3 /tmp/axl_int4 /tmp/axl_int5 /tmp/axl_int6 /tmp/axl_int7 /tmp/axl_int8 /tmp/axl_int9 /tmp/axl_int10 /tmp/axl_int11 /tmp/axl_int12 /tmp/axl_io_test.txt
 	@echo "==> Running AXPM Package Suite..."
 	./$(AXPM) test
 	@echo "==> Running Stage 1 Self-Hosting Bootstrap Check..."
