@@ -1,0 +1,19 @@
+require [Math, IO]
+
+intent "Beta Integration Test 03: Comparisons, unary ops, and boolean logic"
+
+fn main() {
+    let a = 10
+    let b = 20
+    if a < b && b >= 20 && a != b && !(a > b) {
+        println(1)
+    } else {
+        println(0)
+    }
+    let neg = -5 + 15
+    println(neg)
+    if true || false {
+        println("LOGIC_OK")
+    }
+    return 0
+}

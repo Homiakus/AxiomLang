@@ -1,0 +1,25 @@
+require [Math, Memory, IO]
+
+intent "Integration Test 05: Structs, field access, and pipeline operator |>"
+
+struct Point {
+    x: int,
+    y: int
+}
+
+fn double(v) {
+    return v * 2
+}
+
+fn add_offset(v, off) {
+    return v + off
+}
+
+fn main() {
+    let p = { x: 15, y: 27 }
+    let sum = p.x + p.y
+    println(sum)
+    let res = 5 |> double |> add_offset(7)
+    println(res)
+    return 0
+}

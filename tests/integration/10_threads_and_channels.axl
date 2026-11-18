@@ -1,0 +1,44 @@
+require [Memory, IO]
+
+fn atomic_worker(cnt: int) -> int {
+    let mut i = 0
+    while i < 50000 {
+        atomic_add(cnt, 1)
+        i = i + 1
+    }
+    return 0
+}
+
+fn chan_worker(ch: int) -> int {
+    let arr = [10, 32]
+    chan_send(ch, arr[0] + arr[1])
+    return 0
+}
+
+fn fiber_arg(v: int) {
+    println(v)
+    fiber_yield()
+    println(v + 1)
+}
+
+fn main() {
+    spawn fiber_arg(100)
+    spawn fiber_arg(200)
+    fiber_run_all()
+
+    let cnt = atomic_create(0)
+    let t1 = thread_spawn(atomic_worker, cnt)
+    let t2 = thread_spawn(atomic_worker, cnt)
+    thread_join(t1)
+    thread_join(t2)
+    println(atomic_load(cnt))
+
+    let ch = chan_create(8)
+    let c1 = thread_spawn(chan_worker, ch)
+    let c2 = thread_spawn(chan_worker, ch)
+    let v1 = chan_recv(ch)
+    let v2 = chan_recv(ch)
+    thread_join(c1)
+    thread_join(c2)
+    println(v1 + v2)
+}

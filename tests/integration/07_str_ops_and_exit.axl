@@ -1,0 +1,14 @@
+require [Memory, IO]
+
+intent "Integration Test 07: String concatenation, string equality, and exit builtin"
+
+fn main() {
+    let a = "Axiom"
+    let b = "Lang"
+    let c = a + b
+    println(c)
+    if c == "AxiomLang" && a != b {
+        println("STR_EQ_OK")
+    }
+    exit(0)
+}

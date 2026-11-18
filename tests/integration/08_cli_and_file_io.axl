@@ -1,0 +1,18 @@
+require [Memory, IO]
+
+intent "Integration Test 08: CLI arguments (args_count, arg) and File I/O (write_file, read_file)"
+
+fn main() {
+    let argc = args_count()
+    println(argc)
+    let first_arg = arg(1)
+    println(first_arg)
+
+    let path = "/tmp/axl_io_test.txt"
+    let written = write_file(path, "AxiomIO:" + first_arg)
+    println(written)
+
+    let content = read_file(path)
+    println(content)
+    return 0
+}

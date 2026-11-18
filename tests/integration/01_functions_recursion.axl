@@ -1,0 +1,22 @@
+require [Math, IO]
+
+intent "Beta Integration Test 01: Recursive functions and System V ABI multi-arg calls"
+
+fn fib(n) {
+    if n <= 1 {
+        return n
+    }
+    return fib(n - 1) + fib(n - 2)
+}
+
+fn add3(a, b, c) {
+    return a + b + c
+}
+
+fn main() {
+    let f = fib(10)
+    let s = add3(10, 20, 12)
+    println(f)
+    println(s)
+    return 0
+}

@@ -1,0 +1,32 @@
+require [Memory, IO]
+import "src_axl/lexer.axl"
+import "src_axl/codegen.axl"
+
+fn main() {
+    let mut path = "examples/01_hello_world.axl"
+    if args_count() > 1 {
+        path = arg(1)
+    }
+    let src = read_file(path)
+    let tok_cnt = stage1_count_tokens(src)
+
+    if args_count() > 3 {
+        let flag = arg(2)
+        if len(flag) == 2 && char_at(flag, 0) == 45 && char_at(flag, 1) == 83 {
+            let out_s = arg(3)
+            let asm_code = stage1_compile_to_asm(src)
+            write_file(out_s, asm_code)
+            print("Stage1 Compiled [")
+            print(path)
+            print("] -> ")
+            println(out_s)
+            return 0
+        }
+    }
+
+    print("Stage1 Lexer [")
+    print(path)
+    print("] tokens: ")
+    println(tok_cnt)
+    return 0
+}

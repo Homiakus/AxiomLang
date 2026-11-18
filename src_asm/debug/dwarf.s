@@ -1,6 +1,8 @@
 .include "src_asm/include/axiom_defs.inc"
 
 .section .data
+.global dwarf_enabled
+dwarf_enabled: .quad 1
 # DWARF Debug Directives template
 debug_file_prefix:
     .ascii "\n.file 1 \""
@@ -27,6 +29,10 @@ debug_loc_suffix_len = . - debug_loc_suffix
 # Emits .file 1 "<filename>" to generated assembly for GDB/LLDB line tables
 # ==============================================================================
 dwarf_emit_file:
+    cmpq $0, dwarf_enabled(%rip)
+    jne .L_def_go
+    ret
+.L_def_go:
     pushq %rbp
     movq %rsp, %rbp
     pushq %r12
@@ -60,6 +66,10 @@ dwarf_emit_file:
 # Emits .loc 1 <line_number> 0 to output stream
 # ==============================================================================
 dwarf_emit_loc:
+    cmpq $0, dwarf_enabled(%rip)
+    jne .L_del_go
+    ret
+.L_del_go:
     pushq %rbp
     movq %rsp, %rbp
     pushq %r12

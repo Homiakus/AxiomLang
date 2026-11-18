@@ -35,6 +35,7 @@ default_manifest_len = . - default_manifest_template
 
 default_src_dir:  .asciz "src"
 default_main_axl: .asciz "src/main.axl"
+fallback_test_axl: .asciz "tests/pure_asm/01_hello_world.axl"
 
 default_main_code:
     .ascii "require [Memory, IO]\n\n"
@@ -57,6 +58,10 @@ msg_test_pass:
     .ascii " [✓] AXPM Test: Все математические инварианты и границы MCA соблюдены (PASS).\n"
 msg_test_pass_len = . - msg_test_pass
 
+msg_test_fail:
+    .ascii " [!] AXPM Test: Проверка завершилась с ошибкой (FAIL).\n"
+msg_test_fail_len = . - msg_test_fail
+
 compiler_bin_path: .asciz "bin/axlc_asm"
 run_flag_str:      .asciz "-run"
 
@@ -66,9 +71,15 @@ compiler_argv_build:
 compiler_argv_run:
     .quad compiler_bin_path, default_main_axl, run_flag_str, 0
 
+compiler_argv_fallback_test:
+    .quad compiler_bin_path, fallback_test_axl, run_flag_str, 0
+
 .section .bss
-cmd_argc: .quad 0
-cmd_argv: .quad 0
+cmd_argc:     .quad 0
+cmd_argv:     .quad 0
+wait_status:  .long 0
+manifest_buf: .skip 4096
+entry_path:   .skip 256
 
 .section .text
 .global _start
@@ -91,7 +102,7 @@ _start:
 
     # Check command
     movq 8(%r13), %rdi       # argv[1]
-    
+
     leaq str_cmd_init(%rip), %rsi
     call strcmp
     testl %eax, %eax
@@ -126,15 +137,14 @@ show_usage_and_exit:
 # Subcommand: init
 # ------------------------------------------------------------------------------
 handle_init:
-    # 1. Create axiom.pkg
     movq $SYS_OPEN, %rax
     leaq pkg_manifest_name(%rip), %rdi
-    movq $65, %rsi           # O_WRONLY | O_CREAT
+    movq $(O_WRONLY | O_CREAT | O_TRUNC), %rsi
     movq $0644, %rdx
     syscall
     cmpq $0, %rax
     jl init_error
-    movq %rax, %r14          # fd
+    movq %rax, %r14
 
     movq $SYS_WRITE, %rax
     movq %r14, %rdi
@@ -146,16 +156,14 @@ handle_init:
     movq %r14, %rdi
     syscall
 
-    # 2. mkdir src (sys_mkdir = 83)
-    movq $83, %rax
+    movq $83, %rax           # sys_mkdir
     leaq default_src_dir(%rip), %rdi
     movq $0755, %rsi
     syscall
 
-    # 3. Create src/main.axl
     movq $SYS_OPEN, %rax
     leaq default_main_axl(%rip), %rdi
-    movq $65, %rsi           # O_WRONLY | O_CREAT
+    movq $(O_WRONLY | O_CREAT | O_TRUNC), %rsi
     movq $0644, %rdx
     syscall
     cmpq $0, %rax
@@ -172,7 +180,6 @@ handle_init:
     movq %r14, %rdi
     syscall
 
-    # Print success
     movq $SYS_WRITE, %rax
     movq $STDOUT_FILENO, %rdi
     leaq msg_init_ok(%rip), %rsi
@@ -192,17 +199,17 @@ init_error:
 # Subcommand: build
 # ------------------------------------------------------------------------------
 handle_build:
+    call resolve_manifest_entry
     movq $SYS_WRITE, %rax
     movq $STDOUT_FILENO, %rdi
     leaq msg_build_start(%rip), %rsi
     movq $msg_build_start_len, %rdx
     syscall
 
-    # execve bin/axlc_asm src/main.axl
     movq $57, %rax            # sys_fork
     syscall
-    cmpq $0, %rax
-    jne wait_child
+    testq %rax, %rax
+    jnz wait_child_and_exit
 
     movq $59, %rax            # sys_execve
     leaq compiler_bin_path(%rip), %rdi
@@ -213,26 +220,15 @@ handle_build:
     movq $127, %rdi
     syscall
 
-wait_child:
-    xorq %rdi, %rdi
-    movq $61, %rax            # sys_wait4
-    xorq %rsi, %rsi
-    xorq %rdx, %rdx
-    xorq %r10, %r10
-    syscall
-
-    movq $SYS_EXIT, %rax
-    xorq %rdi, %rdi
-    syscall
-
 # ------------------------------------------------------------------------------
 # Subcommand: run
 # ------------------------------------------------------------------------------
 handle_run:
+    call resolve_manifest_entry
     movq $57, %rax            # sys_fork
     syscall
-    cmpq $0, %rax
-    jne wait_child
+    testq %rax, %rax
+    jnz wait_child_and_exit
 
     movq $59, %rax            # sys_execve
     leaq compiler_bin_path(%rip), %rdi
@@ -243,10 +239,75 @@ handle_run:
     movq $127, %rdi
     syscall
 
+wait_child_and_exit:
+    movq %rax, %rdi
+    call wait_child_status
+    movq %rax, %rdi
+    movq $SYS_EXIT, %rax
+    syscall
+
+wait_child_status:
+    # %rdi = pid -> returns exit code in %rax
+    movl $0, wait_status(%rip)
+    leaq wait_status(%rip), %rsi
+    xorq %rdx, %rdx
+    xorq %r10, %r10
+    movq $61, %rax            # sys_wait4
+    syscall
+    movl wait_status(%rip), %eax
+    movl %eax, %ecx
+    andl $0x7f, %ecx
+    jnz .L_wcs_sig
+    shrl $8, %eax
+    andl $0xff, %eax
+    ret
+.L_wcs_sig:
+    movq $128, %rax
+    addq %rcx, %rax
+    ret
+
 # ------------------------------------------------------------------------------
-# Subcommand: test
+# Subcommand: test (runs src/main.axl if present, else tests/pure_asm/01_hello_world.axl)
 # ------------------------------------------------------------------------------
 handle_test:
+    # Check if src/main.axl exists
+    movq $SYS_OPEN, %rax
+    leaq default_main_axl(%rip), %rdi
+    movq $O_RDONLY, %rsi
+    xorq %rdx, %rdx
+    syscall
+    testq %rax, %rax
+    js .L_try_fallback_test
+    movq %rax, %rdi
+    movq $SYS_CLOSE, %rax
+    syscall
+    leaq compiler_argv_run(%rip), %r12
+    jmp .L_exec_test
+
+.L_try_fallback_test:
+    leaq compiler_argv_fallback_test(%rip), %r12
+
+.L_exec_test:
+    movq $57, %rax            # sys_fork
+    syscall
+    testq %rax, %rax
+    jnz .L_test_wait
+
+    movq $59, %rax            # sys_execve
+    leaq compiler_bin_path(%rip), %rdi
+    movq %r12, %rsi
+    xorq %rdx, %rdx
+    syscall
+    movq $SYS_EXIT, %rax
+    movq $127, %rdi
+    syscall
+
+.L_test_wait:
+    movq %rax, %rdi
+    call wait_child_status
+    testq %rax, %rax
+    jnz .L_test_failed
+
     movq $SYS_WRITE, %rax
     movq $STDOUT_FILENO, %rdi
     leaq msg_test_pass(%rip), %rsi
@@ -254,6 +315,16 @@ handle_test:
     syscall
     movq $SYS_EXIT, %rax
     xorq %rdi, %rdi
+    syscall
+
+.L_test_failed:
+    movq $SYS_WRITE, %rax
+    movq $STDERR_FILENO, %rdi
+    leaq msg_test_fail(%rip), %rsi
+    movq $msg_test_fail_len, %rdx
+    syscall
+    movq $SYS_EXIT, %rax
+    movq $1, %rdi
     syscall
 
 # ------------------------------------------------------------------------------
@@ -275,4 +346,86 @@ strcmp_equal:
     ret
 strcmp_diff:
     movl $1, %eax
+    ret
+
+# ------------------------------------------------------------------------------
+# resolve_manifest_entry(): reads axiom.pkg and extracts entry = "..."
+# ------------------------------------------------------------------------------
+.section .rodata
+pat_entry_key: .ascii "entry"
+.section .text
+resolve_manifest_entry:
+    movq $SYS_OPEN, %rax
+    leaq pkg_manifest_name(%rip), %rdi
+    movq $O_RDONLY, %rsi
+    xorq %rdx, %rdx
+    syscall
+    testq %rax, %rax
+    js .L_rme_done
+    movq %rax, %r12
+
+    movq $SYS_READ, %rax
+    movq %r12, %rdi
+    leaq manifest_buf(%rip), %rsi
+    movq $4095, %rdx
+    syscall
+    movq %rax, %r13          # bytes read
+    movq $SYS_CLOSE, %rax
+    movq %r12, %rdi
+    syscall
+    cmpq $8, %r13
+    jl .L_rme_done
+
+    leaq manifest_buf(%rip), %rbx
+    xorq %rcx, %rcx
+.L_rme_scan:
+    cmpq %r13, %rcx
+    jge .L_rme_done
+    cmpb $'e', (%rbx, %rcx)
+    jne .L_rme_next
+    # Check "entry"
+    cmpb $'n', 1(%rbx, %rcx)
+    jne .L_rme_next
+    cmpb $'t', 2(%rbx, %rcx)
+    jne .L_rme_next
+    cmpb $'r', 3(%rbx, %rcx)
+    jne .L_rme_next
+    cmpb $'y', 4(%rbx, %rcx)
+    jne .L_rme_next
+    addq $5, %rcx
+    # Find opening '"'
+.L_rme_q1:
+    cmpq %r13, %rcx
+    jge .L_rme_done
+    cmpb $'"', (%rbx, %rcx)
+    je .L_rme_copy
+    incq %rcx
+    jmp .L_rme_q1
+.L_rme_copy:
+    incq %rcx
+    leaq entry_path(%rip), %rdi
+    xorq %rdx, %rdx
+.L_rme_cp_lp:
+    cmpq %r13, %rcx
+    jge .L_rme_done
+    cmpq $255, %rdx
+    jge .L_rme_done
+    movb (%rbx, %rcx), %al
+    cmpb $'"', %al
+    je .L_rme_fin
+    movb %al, (%rdi, %rdx)
+    incq %rcx
+    incq %rdx
+    jmp .L_rme_cp_lp
+.L_rme_fin:
+    movb $0, (%rdi, %rdx)
+    leaq compiler_argv_build(%rip), %rax
+    movq %rdi, 8(%rax)
+    leaq compiler_argv_run(%rip), %rax
+    movq %rdi, 8(%rax)
+    ret
+.L_rme_next:
+    incq %rcx
+    jmp .L_rme_scan
+.L_rme_done:
     ret

@@ -1,0 +1,22 @@
+require [Math, Memory, IO]
+
+intent "Beta Integration Test 04: Arrays, bounds-checked indexing, len(), and constant folding"
+
+fn sum_array(arr) {
+    let n = len(arr)
+    let mut total = 0
+    for i in 0..n {
+        total = total + arr[i]
+    }
+    return total
+}
+
+fn main() {
+    let nums = [10, 20, 30, 40]
+    println(len(nums))
+    println(nums[2])
+    println(sum_array(nums))
+    let folded = 2 + 3 * 4
+    println(folded)
+    return 0
+}

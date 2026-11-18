@@ -52,6 +52,7 @@
 .equ TOK_SPAWN,    20
 .equ TOK_SEND,     21
 .equ TOK_RECEIVE,  22
+.equ TOK_WHILE,    23
 
 # Delimiters & Operators
 .equ TOK_ASSIGN,   30  # =
@@ -73,3 +74,11 @@
 .equ TOK_COMMA,    46  # ,
 .equ TOK_COLON,    47  # :
 .equ TOK_SEMICOLON,48  # ;
+.equ TOK_NEQ,      49  # !=
+.equ TOK_LE,       50  # <=
+.equ TOK_GE,       51  # >=
+.equ TOK_DOT,      52  # .
+.equ TOK_DOTDOT,   53  # ..
+.equ TOK_AND,      54  # &&
+.equ TOK_OR,       55  # ||
+.equ TOK_PIPE,     56  # |>

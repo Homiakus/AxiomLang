@@ -1,6 +1,6 @@
 // 07_structs.axl — Пользовательские структуры данных и типизация в AxiomLang
 
-require cap[Console.Out]
+require [Memory, IO]
 
 struct UserConfig {
     user: string,

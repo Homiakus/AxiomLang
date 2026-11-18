@@ -1,6 +1,6 @@
 // 05_for_in_loop.axl — Итерация по коллекциям в AxiomLang
 
-require cap[Console.Out]
+require [Memory, IO]
 
 intent "Итерация по массиву и обработка элементов" {
     let items = ["AxiomCore", "SpectrumEngine", "LWEProtector"];

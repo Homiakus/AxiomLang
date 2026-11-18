@@ -1,0 +1,72 @@
+require [Memory, IO]
+
+fn safe_div(a: int, b: int) -> int {
+    if b == 0 {
+        return res_err("division by zero")
+    }
+    return res_ok(a / b)
+}
+
+fn tcp_server_worker(listen_fd: int) -> int {
+    let client = tcp_accept(listen_fd)
+    if client >= 0 {
+        let req = fd_read(client, 64)
+        fd_write(client, "ECHO:" + req)
+        fd_close(client)
+    }
+    fd_close(listen_fd)
+    return 0
+}
+
+fn main() {
+    // 1. Scoped Arena Mark/Reset (zero leak over 1000 iterations)
+    let mark0 = arena_mark()
+    let mut k = 0
+    while k < 1000 {
+        let m = arena_mark()
+        let tmp = int_to_str(k)
+        arena_reset(m)
+        k = k + 1
+    }
+    let used_after = arena_used()
+    if used_after == mark0 {
+        println("ARENA_OK")
+    }
+
+    // 2. int_to_str
+    println(int_to_str(0) + "," + int_to_str(-42) + "," + int_to_str(12345))
+
+    // 3. Thread-safe Hash Map
+    let mp = map_create(32)
+    map_set(mp, "alpha", 100)
+    map_set(mp, "beta", 200)
+    map_set(mp, "alpha", 150)
+    println(map_get(mp, "alpha") + map_get(mp, "beta"))
+    println(map_has(mp, "gamma"))
+
+    // 4. Result error handling
+    let r1 = safe_div(84, 2)
+    let r2 = safe_div(10, 0)
+    if res_is_ok(r1) == 1 {
+        println(res_unwrap(r1))
+    }
+    if res_is_ok(r2) == 0 {
+        println(res_err_msg(r2))
+    }
+
+    // 5. Real TCP socket server + client over OS thread + time_ns
+    let t0 = time_ns()
+    let srv = tcp_listen(19876)
+    let th = thread_spawn(tcp_server_worker, srv)
+    sleep_ms(10)
+    let cli = tcp_connect_local(19876)
+    fd_write(cli, "PING_BETA")
+    let resp = fd_read(cli, 64)
+    fd_close(cli)
+    thread_join(th)
+    let t1 = time_ns()
+    println(resp)
+    if t1 > t0 {
+        println("TIME_OK")
+    }
+}

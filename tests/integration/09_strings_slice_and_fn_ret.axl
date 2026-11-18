@@ -1,0 +1,17 @@
+require [Math, Memory, IO]
+
+intent "Integration Test 09: char_at, substr, to_int, and user fn returning string"
+
+fn greet(name) {
+    return "Hello, " + name
+}
+
+fn main() {
+    let g = greet("Axiom")
+    println(g)
+    let sub = substr("AxiomLang", 5, 4)
+    println(sub)
+    println(char_at("ABC", 1))
+    println(to_int("-42") + 100)
+    return 0
+}

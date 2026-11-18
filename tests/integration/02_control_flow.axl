@@ -1,0 +1,26 @@
+require [Math, IO]
+
+intent "Beta Integration Test 02: Control flow (if/else, while, for-in range)"
+
+fn main() {
+    let mut sum = 0
+    let mut i = 1
+    while i <= 5 {
+        sum = sum + i
+        i = i + 1
+    }
+    println(sum)
+
+    let mut range_sum = 0
+    for k in 1..6 {
+        range_sum = range_sum + k
+    }
+    println(range_sum)
+
+    if sum == 15 && range_sum == 15 {
+        println("FLOW_OK")
+    } else {
+        println("FLOW_FAIL")
+    }
+    return 0
+}

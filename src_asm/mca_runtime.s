@@ -72,22 +72,30 @@ mca_arena_alloc:
     cmpl $MCA_MAGIC, MCA_OFF_MAGIC(%rdi)
     jne alloc_oom
 
+    # Enforce CAP_MEM_WRITE capability
+    testl $CAP_MEM_WRITE, MCA_OFF_CAPS(%rdi)
+    jz alloc_oom
+
     # Align requested size to 8 bytes
     movq %rsi, %rax
     addq $7, %rax
+    jc alloc_oom
     andq $-8, %rax
     movq %rax, %rsi
 
-    movq MCA_OFF_USED_SIZE(%rdi), %rcx
-    movq %rcx, %rdx
+.L_mca_cas_retry:
+    movq MCA_OFF_USED_SIZE(%rdi), %rax
+    movq %rax, %rdx
     addq %rsi, %rdx          # new_used = old_used + aligned_size
+    jc alloc_oom
 
     cmpq MCA_OFF_TOTAL_SIZE(%rdi), %rdx
     ja alloc_oom             # Out of arena capacity!
 
-    # Commit bump pointer
-    movq %rdx, MCA_OFF_USED_SIZE(%rdi)
-    leaq (%rdi, %rcx, 1), %rax # return arena_base + old_used
+    # Atomic commit of bump pointer
+    lock cmpxchgq %rdx, MCA_OFF_USED_SIZE(%rdi)
+    jne .L_mca_cas_retry
+    addq %rdi, %rax          # return arena_base + old_used
 
     leave
     ret
